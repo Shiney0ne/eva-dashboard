@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Eva's World">
+<title>Eva's World</title>
+<style>
+:root {
+  --primary: #F472B6;
+  --primary-light: rgba(244,114,182,0.15);
+  --primary-dark: #BE185D;
+  --accent: #C084FC;
+  --accent-light: rgba(192,132,252,0.15);
+  --accent-dark: #7E22CE;
+  --green: #4ADE80; --green-light: rgba(74,222,128,0.15);
+  --red: #FB7185; --red-light: rgba(251,113,133,0.15);
+  --amber: #FBBF24; --amber-light: rgba(251,191,36,0.15);
+  --blue: #818CF8; --blue-light: rgba(129,140,248,0.15);
+  --bg: #0D0517;
+  --surface: #160B24;
+  --surface2: #1E0F30;
+  --border: #3B1F4E;
+  --text: #FAF0FF;
+  --text-muted: #9D6BB8;
+  --radius: 16px; --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, 'SF Pro Rounded', 'Helvetica Neue', sans-serif; background: var(--bg); min-height: 100vh; overscroll-behavior: none; position: relative; overflow-x: hidden; }
+
+/* MANGA INK BACKGROUND */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    repeating-linear-gradient(108deg, transparent, transparent 60px, rgba(244,114,182,0.03) 60px, rgba(244,114,182,0.03) 61px),
+    repeating-linear-gradient(72deg, transparent, transparent 80px, rgba(192,132,252,0.03) 80px, rgba(192,132,252,0.03) 81px);
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(244,114,182,0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 85%, rgba(192,132,252,0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(251,191,36,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 14px 12px 100px; }
+
+/* FLOATING MANGA ELEMENTS */
+.hud-deco { position: fixed; font-size: 70px; opacity: 0.05; pointer-events: none; z-index: 0; animation: scan 7s ease-in-out infinite; }
+@keyframes scan { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+.hud-1 { top: 8%; right: 4%; animation-delay: 0s; }
+.hud-2 { bottom: 25%; left: 3%; animation-delay: 3s; }
+.hud-3 { top: 45%; right: 6%; animation-delay: 6s; }
+
+/* INK SHIMMER */
+.scanline { position: fixed; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(244,114,182,0.4), rgba(192,132,252,0.4), transparent); z-index: 2; pointer-events: none; animation: scan-line 6s ease-in-out infinite; }
+@keyframes scan-line { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100vh;opacity:0} }
+
+/* PHONE OVERLAY */
+#phone-overlay { display:none; position:fixed; inset:0; z-index:9999; background:#0D0517; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 24px; }
+#phone-overlay.show { display:flex; }
+#phone-overlay::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 30%, rgba(244,114,182,0.15) 0%, transparent 60%); }
+.overlay-sys { font-size:13px; color:var(--primary); letter-spacing:3px; margin-bottom:16px; opacity:0.7; position:relative; }
+.overlay-time { font-size:80px; font-weight:900; color:var(--primary); letter-spacing:-3px; line-height:1; margin-bottom:4px; position:relative; }
+.overlay-date { font-size:16px; color:var(--text-muted); font-weight:600; margin-bottom:40px; position:relative; }
+.overlay-icon { font-size:100px; margin-bottom:24px; animation:pulse-icon 2s ease-in-out infinite; position:relative; }
+@keyframes pulse-icon { 0%,100%{transform:scale(1) rotate(-3deg)} 50%{transform:scale(1.08) rotate(3deg)} }
+.overlay-title { font-size:32px; font-weight:900; color:var(--accent); margin-bottom:12px; position:relative; }
+.overlay-sub { font-size:18px; color:var(--text-muted); font-weight:600; max-width:320px; margin-bottom:40px; line-height:1.5; position:relative; }
+.overlay-dismiss { padding:14px 36px; border-radius:99px; border:2px solid var(--primary); background:rgba(244,114,182,0.1); color:var(--primary); font-size:14px; font-weight:700; cursor:pointer; position:relative; }
+
+/* HEADER */
+.header {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 18px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between; color: var(--text);
+  border: 2px solid var(--primary);
+  position: relative; overflow: hidden;
+}
+.header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--primary),var(--accent),transparent); }
+.header::after { content:'✦  Eva\'s World  ✦  🌸  ✦  Eva\'s World  ✦'; position:absolute; bottom:4px; left:0; right:0; font-size:9px; letter-spacing:4px; color:var(--primary); opacity:0.2; text-align:center; overflow:hidden; white-space:nowrap; }
+.header-left h1 { font-size:24px; font-weight:800; letter-spacing:-0.5px; color:var(--primary); font-family:-apple-system,sans-serif; }
+.header-left .greeting { font-size:12px; color:var(--text-muted); margin-top:1px; letter-spacing:1px; }
+.header-right { text-align:right; }
+.header-date { font-size:11px; color:var(--text-muted); }
+.header-time { font-size:30px; font-weight:800; color:var(--accent); letter-spacing:-1px; line-height:1.1; }
+
+/* CLOCK CARD */
+.clock-card { background:var(--surface); border:2px solid var(--border); border-radius:var(--radius); padding:20px 18px 16px; margin-bottom:12px; display:none; }
+.clock-card.visible { display:block; }
+.clock-card-title { font-size:15px; font-weight:800; text-align:center; margin-bottom:4px; font-family:-apple-system,sans-serif; letter-spacing:1px; }
+.clock-card-subtitle { font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:16px; font-family:'Courier New',monospace; }
+.clock-layout { display:flex; align-items:center; gap:20px; }
+.clock-svg-wrap { flex-shrink:0; }
+.clock-info { flex:1; display:flex; flex-direction:column; gap:12px; }
+.clock-time-big { font-size:52px; font-weight:900; letter-spacing:-2px; line-height:1; font-family:-apple-system,sans-serif; }
+.clock-seg-bar { height:18px; border-radius:4px; background:var(--surface2); overflow:hidden; border:1.5px solid var(--border); margin-top:4px; }
+.clock-seg-fill { height:100%; border-radius:4px; transition:width 1s linear,background 1s; }
+.colour-key { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+.colour-key-item { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; color:var(--text-muted); font-family:'Courier New',monospace; }
+.colour-key-dot { width:14px; height:14px; border-radius:3px; flex-shrink:0; }
+
+.time-info-bar { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:12px; display:flex; align-items:center; gap:12px; font-size:14px; font-weight:600; color:var(--text-muted); }
+
+/* BUS WIDGET — same card style as weather */
+.bus-widget { background:var(--surface); border:2px solid var(--border); border-radius:var(--radius); padding:14px 18px; margin-bottom:12px; }
+.weather-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.weather-main { display:flex; align-items:center; gap:12px; }
+.weather-icon { font-size:36px; }
+.weather-temp { font-size:28px; font-weight:800; color:var(--text); font-family:-apple-system,sans-serif; }
+.weather-desc { font-size:12px; color:var(--text-muted); font-family:'Courier New',monospace; }
+.weather-alerts { display:flex; gap:6px; flex-wrap:wrap; }
+.weather-alert { display:flex; align-items:center; gap:5px; padding:5px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid; }
+.weather-pills { display:flex; gap:7px; flex-wrap:wrap; margin-top:6px; }
+.weather-pill { display:flex; align-items:center; gap:5px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:4px 11px; font-size:11px; font-weight:600; color:var(--text-muted); font-family:'Courier New',monospace; }
+.weather-loading { font-size:13px; color:var(--text-muted); text-align:center; padding:10px; font-family:'Courier New',monospace; }
+
+/* NAV - HUD STYLE */
+.nav-tabs { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+.nav-tab { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 4px 9px; text-align:center; cursor:pointer; transition:all 0.2s; -webkit-user-select:none; position:relative; overflow:hidden; }
+.nav-tab::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--primary); transform:scaleX(0); transition:transform 0.2s; }
+.nav-tab.active { background:rgba(0,212,255,0.1); border-color:var(--primary); }
+.nav-tab.active::before { transform:scaleX(1); }
+.nav-tab .tab-icon { font-size:24px; display:block; margin-bottom:3px; }
+.nav-tab .tab-label { font-size:10px; font-weight:700; color:var(--text-muted); font-family:'Courier New',monospace; letter-spacing:1px; }
+.nav-tab.active .tab-label { color:var(--primary); }
+.section { display:none; }
+.section.active { display:block; }
+.card { background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:18px; margin-bottom:12px; position:relative; }
+.card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:linear-gradient(180deg,var(--primary),var(--accent)); border-radius:var(--radius) 0 0 var(--radius); }
+
+/* ROUTINE */
+.big-count { text-align:center; padding:10px 0 8px; }
+.big-count-num { font-size:72px; font-weight:900; line-height:1; letter-spacing:-3px; transition:color 0.4s; font-family:-apple-system,sans-serif; }
+.big-count-label { font-size:12px; color:var(--text-muted); font-weight:600; margin-top:2px; letter-spacing:2px; font-family:'Courier New',monospace; text-transform:uppercase; }
+.progress-track { height:20px; border-radius:4px; background:var(--surface2); overflow:hidden; margin:10px 0; border:1px solid var(--border); }
+.progress-fill { height:100%; border-radius:4px; transition:width 0.5s,background 0.5s; }
+.progress-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted); font-weight:600; font-family:'Courier New',monospace; }
+.steps-grid { display:flex; flex-direction:column; gap:8px; }
+.step-btn { display:flex; align-items:center; gap:14px; padding:12px 15px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); cursor:pointer; transition:all 0.2s; -webkit-user-select:none; }
+.step-btn.done { border-color:var(--accent); background:rgba(0,255,136,0.08); }
+.step-btn.done .step-name { color:var(--accent); }
+.step-emoji-wrap { width:48px; height:48px; border-radius:var(--radius-sm); background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; transition:all 0.2s; }
+.step-btn.done .step-emoji-wrap { background:rgba(0,255,136,0.15); border-color:var(--accent); }
+.step-name { font-size:16px; font-weight:700; color:var(--text); flex:1; font-family:-apple-system,sans-serif; }
+.step-tick { width:34px; height:34px; border-radius:var(--radius-sm); border:2px solid var(--border); background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; color:transparent; transition:all 0.2s; }
+.step-btn.done .step-tick { background:var(--accent); border-color:var(--accent); color:#050C14; }
+.reset-btn { display:block; width:100%; margin-top:12px; padding:11px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer; font-family:'Courier New',monospace; letter-spacing:1px; }
+
+/* SCHOOL + GCAL SETUP */
+.school-setup,.gcal-setup { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px; margin-bottom:12px; }
+.school-setup-title,.gcal-setup-title { font-size:13px; font-weight:800; color:var(--primary); margin-bottom:8px; font-family:'Courier New',monospace; letter-spacing:2px; text-transform:uppercase; }
+.school-setup p,.gcal-setup p { font-size:12px; color:var(--text-muted); line-height:1.6; margin-bottom:8px; font-family:'Courier New',monospace; }
+.school-input,.gcal-input { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:12px; font-family:'Courier New',monospace; color:var(--primary); background:var(--surface2); margin-bottom:8px; }
+.school-input:focus,.gcal-input:focus { outline:none; border-color:var(--primary); }
+.school-row,.gcal-input-row { display:flex; gap:8px; }
+.school-save-btn,.gcal-save-btn { padding:10px 14px; border-radius:var(--radius-sm); border:1px solid var(--primary); background:rgba(0,212,255,0.1); color:var(--primary); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'Courier New',monospace; letter-spacing:1px; }
+.school-status,.gcal-status { font-size:11px; margin-top:6px; font-weight:600; font-family:'Courier New',monospace; }
+.school-status.ok,.gcal-status.ok { color:var(--accent); }
+.school-status.err,.gcal-status.err { color:var(--red); }
+
+/* CALENDAR */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.cal-nav-btn { width:38px; height:38px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--primary); font-weight:700; }
+.cal-month { font-size:17px; font-weight:800; color:var(--text); font-family:-apple-system,sans-serif; }
+.cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+.cal-wd { text-align:center; font-size:10px; font-weight:700; color:var(--text-muted); padding:4px 0; font-family:'Courier New',monospace; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:12px; }
+.cal-cell { aspect-ratio:1; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; font-size:14px; font-weight:700; color:var(--text); position:relative; transition:all 0.15s; font-family:-apple-system,sans-serif; }
+.cal-cell.empty { background:transparent; border-color:transparent; cursor:default; }
+.cal-cell.today { background:rgba(0,212,255,0.15); border-color:var(--primary); color:var(--primary); }
+.cal-cell.selected:not(.today) { background:rgba(0,255,136,0.1); border-color:var(--accent); color:var(--accent); }
+.cal-cell.has-events::after { content:''; width:5px; height:5px; border-radius:50%; background:var(--primary); position:absolute; bottom:3px; }
+.legend { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:10px; font-weight:700; color:var(--text-muted); font-family:'Courier New',monospace; }
+.legend-dot { width:8px; height:8px; border-radius:2px; }
+.day-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px; }
+.day-panel-title { font-size:14px; font-weight:800; color:var(--text); margin-bottom:10px; font-family:-apple-system,sans-serif; }
+.event-row { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.event-row:last-child { border-bottom:none; }
+.event-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; margin-top:4px; }
+.event-time { font-size:11px; color:var(--text-muted); font-weight:700; min-width:50px; font-family:'Courier New',monospace; }
+.event-name { font-size:14px; font-weight:700; color:var(--text); font-family:-apple-system,sans-serif; }
+.event-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; display:inline-block; margin-top:2px; font-family:'Courier New',monospace; letter-spacing:1px; }
+.badge-school { background:rgba(0,212,255,0.2); color:var(--primary); }
+.badge-class { background:rgba(0,212,255,0.15); color:#93C5FD; }
+.badge-family { background:rgba(0,255,136,0.15); color:var(--accent); }
+.badge-hw { background:rgba(255,184,0,0.15); color:var(--amber); }
+.no-events { text-align:center; padding:18px; color:var(--text-muted); font-size:13px; font-weight:600; font-family:'Courier New',monospace; }
+
+/* HOMEWORK */
+.hw-add-btn { width:100%; padding:13px; border-radius:var(--radius-sm); border:1px dashed var(--primary); background:rgba(0,212,255,0.05); font-size:13px; font-weight:700; color:var(--primary); cursor:pointer; margin-bottom:12px; font-family:'Courier New',monospace; letter-spacing:1px; }
+.hw-form { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:15px; margin-bottom:12px; display:none; }
+.hw-form.open { display:block; }
+.hw-form label { font-size:11px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:4px; margin-top:10px; font-family:'Courier New',monospace; letter-spacing:1px; text-transform:uppercase; }
+.hw-form label:first-child { margin-top:0; }
+.hw-form input,.hw-form select { width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:13px; font-family:'Courier New',monospace; color:var(--text); background:var(--surface2); -webkit-appearance:none; }
+.hw-form input:focus,.hw-form select:focus { outline:none; border-color:var(--primary); }
+.hw-form-btns { display:flex; gap:10px; margin-top:13px; }
+.hw-form-btns button { flex:1; padding:10px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; cursor:pointer; border:1px solid; font-family:'Courier New',monospace; letter-spacing:1px; }
+.btn-save { background:rgba(0,212,255,0.15); color:var(--primary); border-color:var(--primary); }
+.btn-cancel { background:var(--surface2); color:var(--text-muted); border-color:var(--border); }
+.hw-list { display:flex; flex-direction:column; gap:8px; }
+.hw-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.2s; }
+.hw-card.overdue { border-color:var(--red); background:rgba(255,68,68,0.08); }
+.hw-card.due-today { border-color:var(--amber); background:rgba(255,184,0,0.08); }
+.hw-card.due-soon { border-color:var(--primary); background:rgba(0,212,255,0.05); }
+.hw-card.done { opacity:0.4; }
+.hw-card.done .hw-card-name { text-decoration:line-through; }
+.hw-urgency { width:4px; border-radius:2px; flex-shrink:0; align-self:stretch; min-height:44px; }
+.hw-card-body { flex:1; }
+.hw-card-name { font-size:15px; font-weight:700; color:var(--text); font-family:-apple-system,sans-serif; }
+.hw-card-due { font-size:11px; font-weight:700; margin-top:3px; font-family:'Courier New',monospace; }
+.hw-card-due.overdue { color:var(--red); } .hw-card-due.due-today { color:var(--amber); }
+.hw-card-due.due-soon { color:var(--primary); } .hw-card-due.ok { color:var(--accent); }
+.subj-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; display:inline-block; margin-top:4px; font-family:'Courier New',monospace; letter-spacing:1px; }
+.hw-tick { width:36px; height:36px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; color:transparent; transition:all 0.2s; }
+.hw-card.done .hw-tick { background:var(--accent); border-color:var(--accent); color:#050C14; }
+.hw-empty { text-align:center; padding:40px 20px; }
+.hw-empty-icon { font-size:56px; margin-bottom:10px; }
+.hw-empty-text { font-size:14px; font-weight:700; color:var(--text-muted); font-family:'Courier New',monospace; }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="hud-deco hud-1">🌸</div>
+<div class="hud-deco hud-2">🎨</div>
+<div class="hud-deco hud-3">🎵</div>
+
+<div id="phone-overlay">
+  <div class="overlay-sys">✦ 9:00 PM ✦ Time to rest ✦</div>
+  <div class="overlay-time" id="overlay-clock"></div>
+  <div class="overlay-date" id="overlay-date"></div>
+  <div class="overlay-icon">📱</div>
+  <div class="overlay-title">Phone handover time 🌸</div>
+  <div class="overlay-sub">Hand your phone to Mum or Dad and get some rest 💜</div>
+  <button class="overlay-dismiss" onclick="dismissOverlay()">Mum / Dad — tap to dismiss</button>
+</div>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="greeting" id="greeting">Good morning</div>
+      <h1>Eva's World 🌸</h1>
+    </div>
+    <div class="header-right">
+      <div class="header-date" id="header-date"></div>
+      <div class="header-time" id="header-time"></div>
+    </div>
+  </div>
+
+  <div class="clock-card" id="clock-card">
+    <div class="clock-card-title" id="clock-card-title"></div>
+    <div class="clock-card-subtitle" id="clock-card-subtitle"></div>
+    <div class="clock-layout">
+      <div class="clock-svg-wrap">
+        <svg id="clock-svg" width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="68" fill="none" stroke="#0F2040" stroke-width="14"/>
+          <circle id="clock-arc" cx="80" cy="80" r="68" fill="none" stroke="#00D4FF" stroke-width="14" stroke-linecap="square" stroke-dasharray="427.26" stroke-dashoffset="0" transform="rotate(-90 80 80)"/>
+          <circle cx="80" cy="80" r="52" fill="#0A1628"/>
+          <text id="clock-center-min" x="80" y="72" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="28" font-weight="900" fill="#F472B6"></text>
+          <text x="80" y="90" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9" font-weight="700" fill="#9D6BB8">mins left</text>
+          <text id="clock-center-sec" x="80" y="106" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#9D6BB8"></text>
+        </svg>
+      </div>
+      <div class="clock-info">
+        <div>
+          <div class="clock-time-big" id="clock-time-big"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-top:2px;">remaining</div>
+        </div>
+        <div class="clock-seg-bar"><div class="clock-seg-fill" id="clock-seg-fill"></div></div>
+        <div class="colour-key">
+          <div class="colour-key-item"><div class="colour-key-dot" style="background:#4ADE80"></div>Plenty of time</div>
+          <div class="colour-key-item"><div class="colour-key-dot" style="background:#FBBF24"></div>Getting close</div>
+          <div class="colour-key-item"><div class="colour-key-dot" style="background:#FB7185"></div>Hurry up!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="time-info-bar" id="time-info-bar" style="display:none">
+    <div style="font-size:26px" id="ti-icon"></div>
+    <div id="ti-text" style="font-size:14px;"></div>
+  </div>
+
+  <!-- WEATHER + BUS WIDGET -->
+  <div class="weather-bar" id="weather-bar">
+    <div class="weather-loading" id="weather-loading">Loading Melbourne weather... 🌸</div>
+    <div id="weather-content" style="display:none">
+      <div class="weather-top">
+        <div class="weather-main">
+          <div class="weather-icon" id="wx-icon"></div>
+          <div><div class="weather-temp" id="wx-temp"></div><div class="weather-desc" id="wx-desc"></div></div>
+        </div>
+        <div class="weather-alerts" id="wx-alerts"></div>
+      </div>
+      <div class="weather-pills" id="wx-pills"></div>
+    </div>
+  </div>
+
+  <!-- BUS 825 WIDGET — always visible like weather -->
+  <div class="bus-widget" id="bus-widget">
+    <!-- SETUP STATE -->
+    <div id="bus-setup-state">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:22px">🚌</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--primary)">Bus 825 — Beaumaris</div>
+          <div style="font-size:12px;color:var(--text-muted)">Enter PTV credentials to show live times</div>
+        </div>
+        <button onclick="toggleBusSetup()" style="margin-left:auto;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer">Setup</button>
+      </div>
+      <div id="bus-setup-form" style="display:none">
+        <input class="school-input" id="ptv-devid" placeholder="PTV Developer ID (number)" type="text" style="margin-bottom:6px"/>
+        <input class="school-input" id="ptv-key" placeholder="PTV API Key (GUID)" type="text" style="margin-bottom:6px"/>
+        <select class="school-input" id="ptv-stop-id" style="margin-bottom:6px">
+          <option value="18764">Sandringham College / Balcombe Rd</option>
+          <option value="18763">Reserve Rd / Balcombe Rd</option>
+          <option value="18762">Haydens Rd / Balcombe Rd</option>
+          <option value="18761">Keating St / Balcombe Rd</option>
+          <option value="18760">Morey St / Balcombe Rd</option>
+          <option value="custom">Other stop (enter ID below)</option>
+        </select>
+        <input class="school-input" id="ptv-stop-custom" placeholder="Custom stop ID" type="text" style="display:none;margin-bottom:6px"/>
+        <div style="display:flex;gap:8px">
+          <button class="school-save-btn" onclick="savePtvCreds()" style="flex:1">Connect</button>
+          <button onclick="toggleBusSetup()" style="padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;font-weight:700;cursor:pointer">Cancel</button>
+        </div>
+        <div class="school-status" id="ptv-status" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- LIVE STATE -->
+    <div id="bus-live-state" style="display:none">
+      <!-- disruption banner -->
+      <div id="bus-disruption-bar" style="display:none;background:rgba(251,191,36,0.15);border:1.5px solid var(--amber);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--amber)"></div>
+
+      <div style="display:flex;align-items:stretch;gap:12px">
+        <!-- NEXT BUS BIG DISPLAY -->
+        <div style="flex-shrink:0;background:var(--surface2);border:2px solid var(--primary);border-radius:var(--radius);padding:14px 16px;text-align:center;min-width:90px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px">NEXT 825</div>
+          <div style="font-size:48px;font-weight:900;letter-spacing:-2px;line-height:1;transition:color 0.5s" id="bus-next-num">—</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-top:3px" id="bus-next-unit">min</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px" id="bus-next-time">—</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="bus-next-live"></div>
+        </div>
+
+        <!-- FOLLOWING BUSES -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center" id="bus-following"></div>
+
+        <!-- REFRESH + STOP NAME -->
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
+          <button onclick="loadBusDepartures()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Refresh">🔄</button>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--text-muted)" id="bus-stop-label">—</div>
+            <div style="font-size:10px;color:var(--text-muted)" id="bus-updated-time">—</div>
+          </div>
+          <button onclick="toggleBusSetup()" style="padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:10px;cursor:pointer">⚙️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="bus-error-state" style="display:none;text-align:center;padding:10px">
+      <div style="font-size:13px;color:var(--red);font-weight:700" id="bus-error-msg"></div>
+      <button onclick="loadBusDepartures()" style="margin-top:8px;padding:6px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:12px;cursor:pointer">Retry</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showSection('routine')"><span class="tab-icon">🌅</span><span class="tab-label">Morning</span></div>
+    <div class="nav-tab" onclick="showSection('calendar')"><span class="tab-icon">📅</span><span class="tab-label">Calendar</span></div>
+    <div class="nav-tab" onclick="showSection('homework')"><span class="tab-icon">📚</span><span class="tab-label">Homework</span></div>
+    <div class="nav-tab" onclick="showSection('evening')"><span class="tab-icon">🌙</span><span class="tab-label">Evening</span></div>
+  </div>
+
+  <div class="section active" id="section-routine">
+    <div class="card">
+      <div class="big-count">
+        <div class="big-count-num" id="count-num" style="color:var(--primary)">0/6</div>
+        <div class="big-count-label">steps done</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%;background:var(--red)"></div></div>
+      <div class="progress-labels"><span id="prog-msg">Let's go Eva! 🌸</span><span id="pct-label">0%</span></div>
+    </div>
+    <div class="steps-grid" id="steps-list"></div>
+    <button class="reset-btn" onclick="resetRoutine('morning')">🔄 Start morning over</button>
+  </div>
+
+  <div class="section" id="section-calendar">
+    <div class="school-setup">
+      <div class="school-setup-title">🏫 School Calendar</div>
+      <p>Connect Eva's school timetable and events.</p>
+      <input class="school-input" id="school-url-in" placeholder="School API URL" type="text"/>
+      <input class="school-input" id="school-key-in" placeholder="API Key" type="text"/>
+      <input class="school-input" id="school-student-in" placeholder="Student ID (optional)" type="text"/>
+      <div class="school-row"><button class="school-save-btn" onclick="saveSchoolCreds()">Connect</button></div>
+      <div class="school-status" id="school-status"></div>
+    </div>
+    <div class="gcal-setup">
+      <div class="gcal-setup-title">📡 Family Calendar</div>
+      <p>Connect the shared family Google Calendar.</p>
+      <input class="gcal-input" id="gcal-key-in" placeholder="Google API Key" type="text"/>
+      <div class="gcal-input-row">
+        <input class="gcal-input" id="gcal-id-in" placeholder="Calendar ID" type="text"/>
+        <button class="gcal-save-btn" onclick="saveGcalCreds()">Connect</button>
+      </div>
+      <div class="gcal-status" id="gcal-status"></div>
+    </div>
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="cal-month" id="cal-month-title"></div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-weekdays"><div class="cal-wd">MO</div><div class="cal-wd">TU</div><div class="cal-wd">WE</div><div class="cal-wd">TH</div><div class="cal-wd">FR</div><div class="cal-wd">SA</div><div class="cal-wd">SU</div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#00D4FF"></div>SCHOOL</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#93C5FD"></div>CLASS</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#00FF88"></div>FAMILY</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FFB800"></div>HW DUE</div>
+      </div>
+    </div>
+    <div class="day-panel" id="day-panel"></div>
+  </div>
+
+  <div class="section" id="section-homework">
+    <button class="hw-add-btn" onclick="toggleHwForm()">+ Add homework</button>
+    <div class="hw-form" id="hw-form">
+      <label>What's the task?</label>
+      <input type="text" id="hw-name-in" placeholder="e.g. Art portfolio"/>
+      <label>Subject</label>
+      <select id="hw-subj-in"><option>Maths</option><option>English</option><option>Science</option><option>Technology</option><option>History</option><option>Art</option><option>Music</option><option>PDHPE</option><option>Other</option></select>
+      <label>Due date</label>
+      <input type="date" id="hw-due-in"/>
+      <div class="hw-form-btns">
+        <button class="btn-cancel" onclick="toggleHwForm()">Cancel</button>
+        <button class="btn-save" onclick="saveHw()">Save ✓</button>
+      </div>
+    </div>
+    <div class="hw-list" id="hw-list"></div>
+  </div>
+
+  <div class="section" id="section-evening">
+    <div class="card">
+      <div class="big-count">
+        <div class="big-count-num" id="eve-count-num" style="color:var(--accent)">0/5</div>
+        <div class="big-count-label">evening steps done</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="eve-progress-fill" style="width:0%;background:var(--red)"></div></div>
+      <div class="progress-labels"><span id="eve-prog-msg">Wind down time 🌸</span><span id="eve-pct-label">0%</span></div>
+    </div>
+    <div class="steps-grid" id="eve-steps-list"></div>
+    <button class="reset-btn" onclick="resetRoutine('evening')">🔄 Start evening over</button>
+  </div>
+</div>
+
+<script>
+const WEATHER_LAT=-37.8136,WEATHER_LNG=144.9631;
+const MORNING_STEPS=[{emoji:'🛏️',label:'Wake up'},{emoji:'🪥',label:'Brush teeth'},{emoji:'💆',label:'Brush hair'},{emoji:'🚿',label:'Wash face'},{emoji:'👕',label:'Get dressed'},{emoji:'🥣',label:'Eat breakfast'}];
+const EVENING_STEPS=[{emoji:'🎒',label:'Pack school bag'},{emoji:'🛁',label:'Shower or bath'},{emoji:'🪥',label:'Brush teeth'},{emoji:'🎵',label:'Music or sketch time'},{emoji:'🛏️',label:'Lights out'}];
+function buildSampleEvents(){const n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate(),k=(dy)=>y+'-'+m+'-'+(d+dy),ev={};ev[k(0)]=[{time:'9:00 AM',name:'Art class',type:'school'},{time:'3:30 PM',name:'Swimming',type:'family'}];ev[k(1)]=[{time:'9:00 AM',name:'English',type:'class'},{time:'6:00 PM',name:'Family dinner',type:'family'}];ev[k(3)]=[{time:'All day',name:'Art project due',type:'hw'}];return ev;}
+const CIRC=2*Math.PI*68;
+let overlayShown=false;
+function getColour(pct){if(pct<0.333)return'#00FF88';if(pct<0.667)return'#FFB800';return'#FF4444';}
+function fmtMSS(s){const m=Math.floor(s/60),sc=s%60;return m+':'+(sc<10?'0'+sc:sc);}
+function updateClock(){
+  const now=new Date(),h=now.getHours(),min=now.getMinutes(),sec=now.getSeconds(),dow=now.getDay(),isWD=dow>=1&&dow<=5;
+  const ampm=h>=12?'PM':'AM',h12=h%12||12,ms=min<10?'0'+min:''+min;
+  document.getElementById('header-time').textContent=h12+':'+ms+' '+ampm;
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('header-date').textContent=DAYS[dow]+', '+now.getDate()+' '+MONTHS[now.getMonth()];
+  document.getElementById('greeting').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌸':'Good evening 🌙';
+  document.getElementById('overlay-clock').textContent=h12+':'+ms+' '+ampm;
+  document.getElementById('overlay-date').textContent=DAYS[dow]+' '+now.getDate()+' '+MONTHS[now.getMonth()];
+  const inMorning=isWD&&h===7,inEvening=isWD&&h===20,isHandover=isWD&&h===21&&min===0&&sec<30;
+  if(isHandover&&!overlayShown){overlayShown=true;document.getElementById('phone-overlay').classList.add('show');}
+  if(h===21&&min>=2)overlayShown=false;
+  const cc=document.getElementById('clock-card'),ib=document.getElementById('time-info-bar');
+  if(inMorning||inEvening){cc.classList.add('visible');ib.style.display='none';renderClock(h,min,sec,inMorning);}
+  else{cc.classList.remove('visible');renderInfoBar(h,isWD,ib);}
+}
+function renderClock(h,min,sec,isMorning){
+  const el=min*60+sec,rem=3600-el,pct=el/3600,col=getColour(pct);
+  document.getElementById('clock-arc').setAttribute('stroke',col);
+  document.getElementById('clock-arc').setAttribute('stroke-dashoffset',(CIRC*pct).toFixed(2));
+  document.getElementById('clock-center-min').textContent=Math.ceil(rem/60);
+  document.getElementById('clock-center-min').setAttribute('fill',col);
+  document.getElementById('clock-center-sec').textContent=fmtMSS(rem);
+  document.getElementById('clock-time-big').textContent=fmtMSS(rem);
+  document.getElementById('clock-time-big').style.color=col;
+  document.getElementById('clock-seg-fill').style.width=((1-pct)*100).toFixed(1)+'%';
+  document.getElementById('clock-seg-fill').style.background=col;
+  document.getElementById('clock-card-title').textContent=isMorning?'🌅 Morning routine time!':'🌙 Evening routine time!';
+  document.getElementById('clock-card-title').style.color=col;
+  document.getElementById('clock-card-subtitle').textContent=isMorning?'Ready before 8:00 AM — school day 🌸':'Finish by 9:00 PM — then phone handover 💜';
+  const card=document.getElementById('clock-card');card.style.borderColor=rem<600?col:'var(--border)';
+}
+function renderInfoBar(h,isWD,ib){
+  ib.style.display='flex';
+  let icon,text;
+  if(!isWD){icon='🎨';text='Weekend — no countdown today! Free time for art and music 🎵';}
+  else if(h<7){icon='🌙';text='Morning routine starts at 7:00 AM — get some rest 🌸';}
+  else if(h>=8&&h<20){icon='🌸';text='Have a great day Eva! Evening routine starts at 8:00 PM.';}
+  else if(h>=21){icon='💜';text='Phone handover done — sweet dreams! 🌸';}
+  else{icon='✨';text='Countdown coming soon!';}
+  document.getElementById('ti-icon').textContent=icon;
+  document.getElementById('ti-text').textContent=text;
+}
+updateClock();setInterval(updateClock,1000);
+function dismissOverlay(){document.getElementById('phone-overlay').classList.remove('show');}
+
+async function loadWeather(){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LNG}&current=temperature_2m,apparent_temperature,rain,weathercode,windspeed_10m&daily=uv_index_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
+    const data=await r.json(),c=data.current,d=data.daily;
+    renderWeather({temp:Math.round(c.temperature_2m),feels:Math.round(c.apparent_temperature),code:c.weathercode,wind:Math.round(c.windspeed_10m),rainTotal:d.precipitation_sum[0],uvMax:Math.round(d.uv_index_max[0]),tempMax:Math.round(d.temperature_2m_max[0]),tempMin:Math.round(d.temperature_2m_min[0])});
+  }catch(e){document.getElementById('weather-loading').textContent='// WEATHER_DATA: UNAVAILABLE';}
+}
+function wmoIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=3)return'☁️';if(c<=49)return'🌫️';if(c<=69)return'🌧️';return'⛈️';}
+function wmoDesc(c){if(c===0)return'CLEAR_SKY';if(c<=2)return'PARTLY_CLOUDY';if(c<=3)return'OVERCAST';if(c<=49)return'FOG_DETECTED';if(c<=69)return'RAIN_DETECTED';return'STORM_WARNING';}
+function uvLevel(u){if(u<=2)return{label:'LOW',color:'#00FF88',bg:'rgba(0,255,136,0.1)'};if(u<=5)return{label:'MOD',color:'#FFB800',bg:'rgba(255,184,0,0.1)'};if(u<=7)return{label:'HIGH',color:'#FF8C00',bg:'rgba(255,140,0,0.1)'};return{label:'V_HIGH',color:'#FF4444',bg:'rgba(255,68,68,0.1)'};}
+function renderWeather(wx){
+  document.getElementById('weather-loading').style.display='none';document.getElementById('weather-content').style.display='block';
+  document.getElementById('wx-icon').textContent=wmoIcon(wx.code);
+  document.getElementById('wx-temp').textContent=wx.temp+'°C';
+  document.getElementById('wx-desc').textContent='// '+wmoDesc(wx.code)+' · FEELS: '+wx.feels+'°C';
+  const alerts=[];
+  if(wx.rainTotal>0.5)alerts.push({icon:'☂️',label:'UMBRELLA',color:'#00D4FF',bg:'rgba(0,212,255,0.1)',border:'#00D4FF'});
+  if(wx.temp<15)alerts.push({icon:'🧥',label:'COAT',color:'#C4B5FD',bg:'rgba(168,85,247,0.1)',border:'#A855F7'});
+  if(wx.uvMax>=3){const u=uvLevel(wx.uvMax);alerts.push({icon:'🧴',label:'SUNSCREEN',color:u.color,bg:u.bg,border:u.color});}
+  const ae=document.getElementById('wx-alerts');ae.innerHTML='';
+  alerts.forEach(a=>{const el=document.createElement('div');el.className='weather-alert';el.style.background=a.bg;el.style.color=a.color;el.style.borderColor=a.border;el.innerHTML='<span style="font-size:16px">'+a.icon+'</span><span>'+a.label+'</span>';ae.appendChild(el);});
+  const uv=uvLevel(wx.uvMax);
+  const pills=[{icon:'🌡️',label:wx.tempMin+'–'+wx.tempMax+'°C'},{icon:'💨',label:wx.wind+'_KMH'},{icon:'🌂',label:wx.rainTotal>0?wx.rainTotal+'MM':'NO_RAIN'},{icon:'☀️',label:'UV:'+wx.uvMax+'_'+uv.label,color:uv.color}];
+  const pe=document.getElementById('wx-pills');pe.innerHTML='';
+  pills.forEach(p=>{const el=document.createElement('div');el.className='weather-pill';if(p.color)el.style.color=p.color;el.innerHTML='<span>'+p.icon+'</span>'+p.label;pe.appendChild(el);});
+}
+loadWeather();setInterval(loadWeather,30*60*1000);
+
+let morningDone=MORNING_STEPS.map(()=>false),eveningDone=EVENING_STEPS.map(()=>false);
+function todayKey(){const n=new Date();return n.getFullYear()+'-'+n.getMonth()+'-'+n.getDate();}
+function renderRoutine(steps,done,prefix){
+  const dc=done.filter(Boolean).length,total=steps.length,pct=Math.round((dc/total)*100),isEve=prefix==='eve';
+  const fillEl=document.getElementById(isEve?'eve-progress-fill':'progress-fill');
+  const numEl=document.getElementById(isEve?'eve-count-num':'count-num');
+  const pctEl=document.getElementById(isEve?'eve-pct-label':'pct-label');
+  const msgEl=document.getElementById(isEve?'eve-prog-msg':'prog-msg');
+  const listEl=document.getElementById(isEve?'eve-steps-list':'steps-list');
+  let col='#FF4444';
+  if(pct>=100)col='#00FF88';else if(pct>=66)col='#00D4FF';else if(pct>=33)col='#FFB800';
+  if(fillEl){fillEl.style.width=pct+'%';fillEl.style.background=col;}
+  if(numEl){numEl.textContent=dc+'/'+total;numEl.style.color=col;}
+  if(pctEl)pctEl.textContent=pct+'%';
+  if(msgEl){if(pct===100)msgEl.textContent=isEve?'All done — sweet dreams 🌸':'Amazing, all done! 🎨';else if(pct>=66)msgEl.textContent='Nearly there! ✨';else if(pct>=33)msgEl.textContent='Great work! 🌸';else msgEl.textContent=isEve?'Wind down time 🌸':'Let\'s go Eva! 🌸';}
+  if(!listEl)return;listEl.innerHTML='';
+  steps.forEach((s,i)=>{const div=document.createElement('div');div.className='step-btn'+(done[i]?' done':'');div.innerHTML='<div class="step-emoji-wrap">'+s.emoji+'</div><div class="step-name">'+s.label+'</div><div class="step-tick">✓</div>';div.addEventListener('click',()=>{done[i]=!done[i];renderRoutine(steps,done,prefix);saveRD(isEve?'evening':'morning',done);});listEl.appendChild(div);});
+}
+function resetRoutine(w){if(w==='morning'){morningDone=MORNING_STEPS.map(()=>false);renderRoutine(MORNING_STEPS,morningDone,'progress');}else{eveningDone=EVENING_STEPS.map(()=>false);renderRoutine(EVENING_STEPS,eveningDone,'eve');}saveRD(w,w==='morning'?morningDone:eveningDone);}
+function saveRD(w,d){try{localStorage.setItem('eva_'+w+'_'+todayKey(),JSON.stringify(d));}catch(e){}}
+function loadRD(w,l){try{const s=localStorage.getItem('eva_'+w+'_'+todayKey());if(s)return JSON.parse(s);}catch(e){}return Array(l).fill(false);}
+morningDone=loadRD('morning',MORNING_STEPS.length);eveningDone=loadRD('evening',EVENING_STEPS.length);
+renderRoutine(MORNING_STEPS,morningDone,'progress');renderRoutine(EVENING_STEPS,eveningDone,'eve');
+
+let schoolKey='',schoolUrl='',schoolStudentId='',schoolEvents={},gcalKey='',gcalId='',gcalEvents={};
+const sampleEvents=buildSampleEvents();
+function saveSchoolCreds(){schoolUrl=document.getElementById('school-url-in').value.trim();schoolKey=document.getElementById('school-key-in').value.trim();schoolStudentId=document.getElementById('school-student-in').value.trim();if(!schoolUrl||!schoolKey){setSchoolStatus('Please enter the API URL and key.',false);return;}try{localStorage.setItem('eva_school_url',schoolUrl);localStorage.setItem('eva_school_key',schoolKey);localStorage.setItem('eva_school_sid',schoolStudentId);}catch(e){}setSchoolStatus('Connecting...',null);fetchSchoolEvents().then(()=>setSchoolStatus('School calendar connected ✓',true)).catch(()=>setSchoolStatus('Could not connect. Check URL and API key.',false));}
+function setSchoolStatus(m,ok){const el=document.getElementById('school-status');el.textContent=m;el.className='school-status'+(ok===true?' ok':ok===false?' err':'');}
+async function fetchSchoolEvents(){const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0],end=new Date(now.getFullYear(),now.getMonth()+2,0).toISOString().split('T')[0];let url=schoolUrl+'?start='+start+'&end='+end;if(schoolStudentId)url+='&student_id='+encodeURIComponent(schoolStudentId);const res=await fetch(url,{headers:{'Authorization':'Bearer '+schoolKey,'X-API-Key':schoolKey,'Content-Type':'application/json'}});if(!res.ok)throw new Error('err');const data=await res.json();schoolEvents={};const items=Array.isArray(data)?data:(data.events||data.data||data.items||[]);items.forEach(item=>{const st=item.start||item.startDate||item.date||'';if(!st)return;const d=new Date(st),key=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();if(!schoolEvents[key])schoolEvents[key]=[];const t=item.startTime||item.start_time||(item.allDay?'All day':new Date(st).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true}));schoolEvents[key].push({time:t,name:item.title||item.name||item.summary||'School event',type:'school'});});renderCal();}
+function saveGcalCreds(){gcalKey=document.getElementById('gcal-key-in').value.trim();gcalId=document.getElementById('gcal-id-in').value.trim();if(!gcalKey||!gcalId){setGcalStatus('Please enter both values.',false);return;}try{localStorage.setItem('eva_gcal_key',gcalKey);localStorage.setItem('eva_gcal_id',gcalId);}catch(e){}setGcalStatus('Connecting...',null);fetchGcalEvents().then(()=>setGcalStatus('Connected ✓',true)).catch(()=>setGcalStatus('Could not connect.',false));}
+function setGcalStatus(m,ok){const el=document.getElementById('gcal-status');el.textContent=m;el.className='gcal-status'+(ok===true?' ok':ok===false?' err':'');}
+async function fetchGcalEvents(){const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1).toISOString(),end=new Date(now.getFullYear(),now.getMonth()+2,0).toISOString();const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gcalId)}/events?key=${gcalKey}&timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime&maxResults=100`;const res=await fetch(url);if(!res.ok)throw new Error('err');const data=await res.json();gcalEvents={};(data.items||[]).forEach(item=>{const st=item.start.dateTime||item.start.date,d=new Date(st),key=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();if(!gcalEvents[key])gcalEvents[key]=[];const t=item.start.dateTime?new Date(item.start.dateTime).toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true}):'All day';const s=(item.summary||'').toLowerCase();let type='other';if(/class|lesson|school|maths|english|science|art|music/.test(s))type='class';else if(/family|dinner|swim|sport|visit/.test(s))type='family';else if(/due|homework|project|test/.test(s))type='hw';gcalEvents[key].push({time:t,name:item.summary||'Event',type});});renderCal();}
+function getEvents(y,m,d){const key=y+'-'+m+'-'+d,se=schoolEvents[key]||[];return gcalKey&&gcalId?[...se,...(gcalEvents[key]||[])]: [...se,...(sampleEvents[key]||[])];}
+try{schoolUrl=localStorage.getItem('eva_school_url')||'';schoolKey=localStorage.getItem('eva_school_key')||'';schoolStudentId=localStorage.getItem('eva_school_sid')||'';if(schoolUrl&&schoolKey){document.getElementById('school-url-in').value=schoolUrl;document.getElementById('school-key-in').value=schoolKey;document.getElementById('school-student-in').value=schoolStudentId;setSchoolStatus('Reconnecting...',null);fetchSchoolEvents().then(()=>setSchoolStatus('School calendar connected ✓',true)).catch(()=>setSchoolStatus('Could not reconnect.',false));}gcalKey=localStorage.getItem('eva_gcal_key')||'';gcalId=localStorage.getItem('eva_gcal_id')||'';if(gcalKey&&gcalId){document.getElementById('gcal-key-in').value=gcalKey;document.getElementById('gcal-id-in').value=gcalId;setGcalStatus('Reconnecting...',null);fetchGcalEvents().then(()=>setGcalStatus('Connected ✓',true)).catch(()=>setGcalStatus('Could not reconnect.',false));}}catch(e){}
+
+const todayDate=new Date();let viewYear=todayDate.getFullYear(),viewMonth=todayDate.getMonth(),selDay=todayDate.getDate();
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function changeMonth(dir){viewMonth+=dir;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCal();}
+function renderCal(){
+  document.getElementById('cal-month-title').textContent=MONTH_NAMES[viewMonth]+' '+viewYear;
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const fd=new Date(viewYear,viewMonth,1).getDay(),offset=fd===0?6:fd-1,dim=new Date(viewYear,viewMonth+1,0).getDate();
+  for(let i=0;i<offset;i++){const b=document.createElement('div');b.className='cal-cell empty';grid.appendChild(b);}
+  for(let d=1;d<=dim;d++){
+    const cell=document.createElement('div');cell.className='cal-cell';cell.textContent=d;
+    const isToday=d===todayDate.getDate()&&viewMonth===todayDate.getMonth()&&viewYear===todayDate.getFullYear();
+    const isSel=d===selDay&&viewMonth===todayDate.getMonth()&&viewYear===todayDate.getFullYear();
+    if(isToday)cell.classList.add('today');if(isSel&&!isToday)cell.classList.add('selected');
+    if(getEvents(viewYear,viewMonth,d).length)cell.classList.add('has-events');
+    cell.addEventListener('click',()=>{selDay=d;renderCal();renderDayPanel(viewYear,viewMonth,d);});grid.appendChild(cell);
+  }
+  renderDayPanel(viewYear,viewMonth,selDay);
+}
+function renderDayPanel(y,m,d){
+  const evs=getEvents(y,m,d),date=new Date(y,m,d),panel=document.getElementById('day-panel');
+  const tc={school:'#00D4FF',class:'#93C5FD',family:'#00FF88',hw:'#FFB800',other:'#00D4FF'};
+  const tl={school:'SCHOOL',class:'CLASS',family:'FAMILY',hw:'HW_DUE',other:'EVENT'};
+  const tb={school:'badge-school',class:'badge-class',family:'badge-family',hw:'badge-hw',other:'badge-school'};
+  let html='<div class="day-panel-title">'+DAY_NAMES[date.getDay()].toUpperCase()+' '+d+' '+MONTH_NAMES[m].toUpperCase()+'</div>';
+  if(!evs.length){html+='<div class="no-events">🌸 Nothing on — free time to create!</div>';}
+  else{evs.forEach(ev=>{const t=ev.type||'other';html+='<div class="event-row"><div class="event-dot" style="background:'+tc[t]+'"></div><div class="event-time">'+ev.time+'</div><div><div class="event-name">'+ev.name+'</div><span class="event-badge '+tb[t]+'">'+tl[t]+'</span></div></div>';});}
+  panel.innerHTML=html;
+}
+renderCal();
+
+const SC={'Maths':['rgba(0,212,255,0.15)','#00D4FF'],'English':['rgba(0,255,136,0.15)','#00FF88'],'Science':['rgba(168,85,247,0.15)','#C4B5FD'],'Technology':['rgba(0,212,255,0.2)','#7DD3FC'],'History':['rgba(255,184,0,0.15)','#FFB800'],'Art':['rgba(232,121,160,0.15)','#F9A8D4'],'PDHPE':['rgba(20,184,166,0.15)','#2DD4BF'],'Other':['rgba(100,116,139,0.15)','#94A3B8']};
+function duePlus(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function daysUntil(ds){const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);return Math.round((d-n)/86400000);}
+let hwItems=[],hwNextId=1;
+function loadHwData(){try{const s=localStorage.getItem('eva_homework');if(s){hwItems=JSON.parse(s);hwNextId=hwItems.length?Math.max(...hwItems.map(h=>h.id))+1:1;return;}}catch(e){}hwItems=[{id:1,name:'Art portfolio',subject:'Art',due:duePlus(3),done:false},{id:2,name:'English essay',subject:'English',due:duePlus(5),done:false}];hwNextId=3;}
+function saveHwData(){try{localStorage.setItem('eva_homework',JSON.stringify(hwItems));}catch(e){}}
+function renderHw(){
+  const list=document.getElementById('hw-list');
+  const sorted=[...hwItems].sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return new Date(a.due)-new Date(b.due);});
+  if(!sorted.length){list.innerHTML='<div class="hw-empty"><div class="hw-empty-icon">🎨</div><div class="hw-empty-text">All done — time to draw! 🌸</div></div>';return;}
+  list.innerHTML='';
+  sorted.forEach(hw=>{
+    const days=daysUntil(hw.due);let uc='#4ADE80',cc='',dc='ok',dl='Due in '+days+' day'+(days===1?'':'s');
+    if(days<0){uc='#FB7185';cc='overdue';dc='overdue';dl='Overdue!';}else if(days===0){uc='#FBBF24';cc='due-today';dc='due-today';dl='Due today!';}else if(days<=2){uc='#F472B6';cc='due-soon';dc='due-soon';}
+    const c=SC[hw.subject]||SC['Other'];
+    const card=document.createElement('div');card.className='hw-card '+cc+(hw.done?' done':'');
+    card.innerHTML='<div class="hw-urgency" style="background:'+uc+'"></div><div class="hw-card-body"><div class="hw-card-name">'+hw.name+'</div><div class="hw-card-due '+dc+'">// '+dl+'</div><span class="subj-badge" style="background:'+c[0]+';color:'+c[1]+'">'+hw.subject.toUpperCase()+'</span></div><div class="hw-tick">✓</div>';
+    card.addEventListener('click',()=>{hw.done=!hw.done;renderHw();saveHwData();});list.appendChild(card);
+  });
+}
+let hwFormOpen=false;
+function toggleHwForm(){hwFormOpen=!hwFormOpen;document.getElementById('hw-form').className='hw-form'+(hwFormOpen?' open':'');if(hwFormOpen)document.getElementById('hw-due-in').value=duePlus(1);}
+function saveHw(){const name=document.getElementById('hw-name-in').value.trim(),subj=document.getElementById('hw-subj-in').value,due=document.getElementById('hw-due-in').value;if(!name||!due)return;hwItems.push({id:hwNextId++,name,subject:subj,due,done:false});document.getElementById('hw-name-in').value='';toggleHwForm();renderHw();saveHwData();}
+loadHwData();renderHw();
+
+// ═══════════════════════════════════════════
+// SMART TAB DEFAULTING BY TIME
+// ═══════════════════════════════════════════
+function getDefaultTab(){
+  const h=new Date().getHours(),dow=new Date().getDay(),isWD=dow>=1&&dow<=5;
+  if(h>=6&&h<9)return'routine';
+  if(isWD&&h>=20)return'evening';
+  if(!isWD&&h>=20)return'evening';
+  return'calendar';
+}
+function showSection(name){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  const idx={routine:0,calendar:1,homework:2,evening:3}[name];
+  if(idx!==undefined)document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+}
+showSection(getDefaultTab());
+
+// ═══════════════════════════════════════════
+// PTV BUS 825 WIDGET
+// ═══════════════════════════════════════════
+let ptvDevId='',ptvKey='',ptvStopId='18764';
+const PTV_BASE='https://timetableapi.ptv.vic.gov.au';
+const ROUTE_825_ID=7149;
+const ROUTE_TYPE=2;
+
+const STOP_NAMES={
+  '18764':'Sandringham College / Balcombe Rd',
+  '18763':'Reserve Rd / Balcombe Rd',
+  '18762':'Haydens Rd / Balcombe Rd',
+  '18761':'Keating St / Balcombe Rd',
+  '18760':'Morey St / Balcombe Rd'
+};
+
+async function ptvSign(endpoint){
+  const url=endpoint+'&devid='+ptvDevId;
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(ptvKey),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const sig=await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(url));
+  const hex=Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  return PTV_BASE+url+'&signature='+hex;
+}
+
+function setPtvStatus(msg,ok){
+  const el=document.getElementById('ptv-status');
+  el.textContent=msg;
+  el.className='school-status'+(ok===true?' ok':ok===false?' err':'');
+}
+
+function toggleBusSetup(){
+  const f=document.getElementById('bus-setup-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+function savePtvCreds(){
+  ptvDevId=document.getElementById('ptv-devid').value.trim();
+  ptvKey=document.getElementById('ptv-key').value.trim();
+  const sel=document.getElementById('ptv-stop-id').value;
+  ptvStopId=sel==='custom'?document.getElementById('ptv-stop-custom').value.trim():sel;
+  if(!ptvDevId||!ptvKey){setPtvStatus('Please enter your Dev ID and API Key.',false);return;}
+  try{
+    localStorage.setItem('eva_ptv_devid',ptvDevId);
+    localStorage.setItem('eva_ptv_key',ptvKey);
+    localStorage.setItem('eva_ptv_stop',ptvStopId);
+  }catch(e){}
+  setPtvStatus('Connecting...',null);
+  loadBusDepartures().then(()=>{
+    setPtvStatus('Connected ✓',true);
+    document.getElementById('bus-setup-form').style.display='none';
+  }).catch(()=>{
+    setPtvStatus('Could not connect — check your Dev ID and Key.',false);
+  });
+}
+
+document.getElementById('ptv-stop-id').addEventListener('change',function(){
+  document.getElementById('ptv-stop-custom').style.display=this.value==='custom'?'block':'none';
+});
+
+async function loadBusDepartures(){
+  if(!ptvDevId||!ptvKey)return;
+  const setupEl=document.getElementById('bus-setup-state');
+  const liveEl=document.getElementById('bus-live-state');
+  const errEl=document.getElementById('bus-error-state');
+  errEl.style.display='none';
+
+  try{
+    const endpoint=`/v3/departures/route_type/${ROUTE_TYPE}/stop/${ptvStopId}?route_id=${ROUTE_825_ID}&max_results=5&expand=run`;
+    const signedUrl=await ptvSign(endpoint);
+    const res=await fetch(signedUrl);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const deps=(data.departures||[]).filter(d=>{
+      const t=new Date(d.estimated_departure_utc||d.scheduled_departure_utc);
+      return t>new Date();
+    });
+
+    setupEl.style.display='none';
+    liveEl.style.display='block';
+
+    const now=new Date();
+    document.getElementById('bus-stop-label').textContent=STOP_NAMES[ptvStopId]||('Stop '+ptvStopId);
+    document.getElementById('bus-updated-time').textContent='Updated '+now.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+
+    if(!deps.length){
+      document.getElementById('bus-next-num').textContent='—';
+      document.getElementById('bus-next-time').textContent='No services';
+      document.getElementById('bus-next-unit').textContent='';
+      document.getElementById('bus-next-live').textContent='';
+      document.getElementById('bus-following').innerHTML='<div style="font-size:12px;color:var(--text-muted)">No upcoming departures</div>';
+      return;
+    }
+
+    // Next bus
+    const first=deps[0];
+    const firstTime=new Date(first.estimated_departure_utc||first.scheduled_departure_utc);
+    const minsAway=Math.max(0,Math.round((firstTime-now)/60000));
+    const isLive=!!first.estimated_departure_utc;
+    const numEl=document.getElementById('bus-next-num');
+    numEl.textContent=minsAway<=1?'NOW':minsAway;
+    numEl.style.color=minsAway<=2?'#FB7185':minsAway<=5?'#FBBF24':'var(--primary)';
+    document.getElementById('bus-next-unit').textContent=minsAway<=1?'':minsAway===1?'min':'min';
+    document.getElementById('bus-next-time').textContent=firstTime.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+    document.getElementById('bus-next-live').textContent=isLive?'● Live':'Scheduled';
+    document.getElementById('bus-next-live').style.color=isLive?'#4ADE80':'var(--text-muted)';
+
+    // Following buses (next 3)
+    const followEl=document.getElementById('bus-following');
+    followEl.innerHTML='';
+    deps.slice(1,4).forEach(dep=>{
+      const t=new Date(dep.estimated_departure_utc||dep.scheduled_departure_utc);
+      const mins=Math.max(0,Math.round((t-now)/60000));
+      const live=!!dep.estimated_departure_utc;
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);gap:8px';
+      row.innerHTML=`
+        <span style="font-size:22px;font-weight:800;color:${mins<=5?'#FBBF24':'var(--text)'};min-width:32px">${mins}m</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text);flex:1">${t.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true})}</span>
+        <span style="font-size:10px;font-weight:700;color:${live?'#4ADE80':'var(--text-muted)'}">${live?'Live':'Sch'}</span>`;
+      followEl.appendChild(row);
+    });
+
+    // Disruptions
+    await checkBusDisruptions();
+
+  }catch(err){
+    liveEl.style.display='none';
+    setupEl.style.display='block';
+    errEl.style.display='block';
+    document.getElementById('bus-error-msg').textContent='Could not load bus times. '+err.message;
+    throw err;
+  }
+}
+
+async function checkBusDisruptions(){
+  try{
+    const endpoint=`/v3/disruptions/route_type/${ROUTE_TYPE}?disruption_status=current`;
+    const signedUrl=await ptvSign(endpoint);
+    const res=await fetch(signedUrl);
+    if(!res.ok)return;
+    const data=await res.json();
+    const all=[...(data.disruptions?.metro_bus||[]),...(data.disruptions?.bus||[])];
+    const r825=all.filter(d=>d.routes?.some(r=>r.route_number==='825'));
+    const bar=document.getElementById('bus-disruption-bar');
+    if(r825.length){bar.style.display='block';bar.textContent='⚠️ '+( r825[0].title||'Service disruption on route 825');}
+    else{bar.style.display='none';}
+  }catch(e){}
+}
+
+// Auto-refresh every 60s
+setInterval(()=>{if(ptvDevId&&ptvKey)loadBusDepartures().catch(()=>{});},60000);
+
+// Load saved PTV creds on startup
+try{
+  ptvDevId=localStorage.getItem('eva_ptv_devid')||'';
+  ptvKey=localStorage.getItem('eva_ptv_key')||'';
+  ptvStopId=localStorage.getItem('eva_ptv_stop')||'18764';
+  if(ptvDevId&&ptvKey){
+    document.getElementById('ptv-devid').value=ptvDevId;
+    document.getElementById('ptv-key').value=ptvKey;
+    const sel=document.getElementById('ptv-stop-id');
+    let found=false;
+    for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===ptvStopId){sel.selectedIndex=i;found=true;break;}}
+    if(!found){sel.value='custom';document.getElementById('ptv-stop-custom').value=ptvStopId;document.getElementById('ptv-stop-custom').style.display='block';}
+    loadBusDepartures().catch(()=>{});
+  }
+}catch(e){}
+</script>
+</body>
+</html>
