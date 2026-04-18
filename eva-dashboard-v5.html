@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Eva</title>
+<style>
+:root{
+  --p:#F472B6; --a:#C084FC; --g:#4ADE80; --r:#FB7185; --y:#FBBF24;
+  --bg:#0D0517; --s:#160B24; --s2:#1E0F30; --b:#3B1F4E;
+  --t:#FAF0FF; --tm:#9D6BB8;
+  --rad:16px; --rads:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,'SF Pro Rounded','Helvetica Neue',sans-serif;background:var(--bg);min-height:100vh;overscroll-behavior:none;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(108deg,transparent,transparent 60px,rgba(244,114,182,.03) 60px,rgba(244,114,182,.03) 61px),
+    repeating-linear-gradient(72deg,transparent,transparent 80px,rgba(192,132,252,.03) 80px,rgba(192,132,252,.03) 81px)}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 15%,rgba(244,114,182,.1) 0%,transparent 50%),
+    radial-gradient(ellipse at 85% 85%,rgba(192,132,252,.1) 0%,transparent 50%)}
+.deco{position:fixed;font-size:70px;opacity:.05;pointer-events:none;z-index:0;animation:fl 7s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+.d1{top:8%;right:4%}.d2{bottom:25%;left:3%;animation-delay:3s}.d3{top:45%;right:6%;animation-delay:6s}
+
+.app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:14px 12px 100px}
+
+/* ── PHONE OVERLAY ── */
+#po{display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px}
+#po.show{display:flex}
+#po::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(244,114,182,.15) 0%,transparent 60%)}
+#po .ot{font-size:80px;font-weight:900;color:var(--p);letter-spacing:-3px;line-height:1;margin-bottom:4px;position:relative}
+#po .od{font-size:16px;color:var(--tm);font-weight:600;margin-bottom:40px;position:relative}
+#po .oi{font-size:100px;margin-bottom:24px;animation:pi 2s ease-in-out infinite;position:relative}
+@keyframes pi{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.08) rotate(3deg)}}
+#po h2{font-size:32px;font-weight:900;color:var(--a);margin-bottom:12px;position:relative}
+#po p{font-size:18px;color:var(--tm);font-weight:600;max-width:320px;margin-bottom:40px;line-height:1.5;position:relative}
+#po button{padding:14px 36px;border-radius:99px;border:2px solid var(--p);background:rgba(244,114,182,.1);color:var(--p);font-size:14px;font-weight:700;cursor:pointer;position:relative}
+
+/* ── HERO PANEL ── */
+.hero{background:var(--s);border-radius:var(--rad);border:2px solid var(--p);margin-bottom:12px;overflow:hidden;position:relative}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--a),transparent)}
+.hero-top{display:flex;align-items:center;padding:14px 18px 10px;gap:12px}
+.hero-id{flex-shrink:0}
+.hero-id .gr{font-size:11px;color:var(--tm)}
+.hero-id .day{font-size:11px;color:var(--tm);margin-top:2px}
+.hero-wx{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.wx-icon{font-size:28px;line-height:1}
+.wx-temp{font-size:24px;font-weight:800;color:var(--t)}
+.wx-desc{font-size:11px;color:var(--tm)}
+.wx-alerts{display:flex;gap:5px;flex-wrap:wrap}
+.wx-alert{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:700}
+.hero-clk{text-align:right;flex-shrink:0}
+.hero-clk .time{font-size:34px;font-weight:900;color:var(--a);letter-spacing:-1.5px;line-height:1}
+.hero-clk .date{font-size:11px;color:var(--tm);margin-top:3px}
+.hero-div{height:1px;background:var(--b);margin:0 18px}
+.wx-pills{display:flex;gap:6px;flex-wrap:wrap;padding:10px 18px 12px}
+.wx-pill{display:flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--b);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--tm)}
+
+/* ── ROUTINE WIDGET — always visible ── */
+.routine-widget{background:var(--s);border-radius:var(--rad);border:2px solid var(--b);margin-bottom:12px;overflow:hidden;position:relative;transition:border-color .3s}
+.routine-widget.morning-active{border-color:var(--p)}
+.routine-widget.evening-active{border-color:var(--a)}
+.routine-widget::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:0;transition:opacity .3s}
+.routine-widget.morning-active::before{opacity:1}
+.routine-widget.evening-active::before{background:linear-gradient(90deg,transparent,var(--a),transparent);opacity:1}
+
+/* Header row — always visible */
+.rt-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;-webkit-user-select:none}
+.rt-emoji{font-size:26px;flex-shrink:0}
+.rt-info{flex:1}
+.rt-title{font-size:15px;font-weight:800;color:var(--t)}
+.rt-sub{font-size:12px;color:var(--tm);margin-top:2px}
+.rt-progress-ring{flex-shrink:0;position:relative;width:48px;height:48px}
+.rt-progress-ring svg{transform:rotate(-90deg)}
+.rt-ring-count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:var(--t)}
+
+/* Expandable body */
+.rt-body{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.4,0,.2,1)}
+.rt-body.open{max-height:1200px}
+.rt-body-inner{padding:0 14px 14px}
+
+/* Progress bar */
+.rt-bar-wrap{height:8px;border-radius:4px;background:var(--s2);overflow:hidden;margin-bottom:14px;border:1px solid var(--b)}
+.rt-bar{height:100%;border-radius:4px;transition:width .5s,background .5s;width:0%}
+.rt-msg{font-size:13px;font-weight:700;color:var(--tm);margin-bottom:12px;text-align:center}
+
+/* Step cards — big tap targets */
+.rt-steps{display:flex;flex-direction:column;gap:8px}
+.rt-step{display:flex;align-items:center;gap:14px;padding:14px 15px;border-radius:var(--rads);border:2px solid var(--b);background:var(--s2);cursor:pointer;transition:all .2s;-webkit-user-select:none;position:relative;overflow:hidden}
+.rt-step.done{border-color:var(--g);background:rgba(74,222,128,.08)}
+.rt-step-icon{width:52px;height:52px;border-radius:var(--rads);background:var(--s);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;transition:all .2s}
+.rt-step.done .rt-step-icon{background:rgba(74,222,128,.15);border-color:var(--g)}
+.rt-step-name{font-size:18px;font-weight:700;color:var(--t);flex:1}
+.rt-step.done .rt-step-name{color:var(--g);text-decoration:line-through;text-decoration-color:rgba(74,222,128,.4)}
+.rt-check{width:38px;height:38px;border-radius:50%;border:2px solid var(--b);background:var(--s);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:transparent;transition:all .25s}
+.rt-step.done .rt-check{background:var(--g);border-color:var(--g);color:#0D0517}
+.rt-step:active{transform:scale(.97)}
+
+/* Done celebration */
+.rt-done{display:none;text-align:center;padding:20px 0 8px;font-size:15px;font-weight:700;color:var(--g)}
+.rt-done.show{display:block}
+
+.rt-reset{display:block;width:100%;margin-top:12px;padding:11px;border-radius:var(--rads);border:1px solid var(--b);background:transparent;font-size:12px;font-weight:600;color:var(--tm);cursor:pointer}
+
+/* Collapsed summary (outside routine window) */
+.rt-collapsed-bar{height:6px;border-radius:3px;background:var(--s2);overflow:hidden;margin:0 16px 14px}
+.rt-collapsed-fill{height:100%;border-radius:3px;transition:width .5s,background .5s}
+
+/* ── CARD ── */
+.card{background:var(--s);border-radius:var(--rad);border:1px solid var(--b);padding:18px;margin-bottom:12px;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--p),var(--a));border-radius:var(--rad) 0 0 var(--rad)}
+
+/* ── BUS WIDGET ── */
+.bus-widget{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px}
+
+/* ── SPOTIFY ── */
+.spotify-wrap{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px;position:relative;overflow:hidden}
+.spotify-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1DB954,transparent)}
+.spotify-label{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:700;color:#1DB954}
+
+/* ── FOCUS ── */
+.focus-wrap{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px;position:relative;overflow:hidden}
+.focus-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--a),transparent)}
+.focus-lbl{font-size:11px;font-weight:700;color:var(--a);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.focus-text{font-size:22px;font-weight:700;color:var(--t);line-height:1.3;min-height:32px;cursor:pointer;padding:4px 0}
+.focus-text.ph{color:var(--tm);font-size:16px;font-style:italic;font-weight:400}
+.focus-edit{display:none;margin-top:8px}
+.focus-edit textarea{width:100%;padding:10px 12px;border:1.5px solid var(--a);border-radius:var(--rads);font-size:16px;font-family:inherit;color:var(--t);background:var(--s2);resize:none;height:72px}
+.focus-edit textarea:focus{outline:none}
+.focus-edit .btns{display:flex;gap:8px;margin-top:7px}
+.focus-edit .btns button{padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer}
+.fbtn-save{border:1.5px solid var(--a);background:rgba(192,132,252,.15);color:var(--a)}
+.fbtn-clr{border:1px solid var(--b);background:transparent;color:var(--tm)}
+
+/* ── COUNTDOWN ── */
+.cd-wrap{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px;position:relative;overflow:hidden}
+.cd-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--y),transparent)}
+.cd-lbl{font-size:11px;font-weight:700;color:var(--y);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.cd-body{display:flex;align-items:center;gap:16px}
+.cd-num{font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--y);min-width:90px;text-align:center}
+.cd-unit{font-size:12px;font-weight:700;color:var(--tm);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-top:2px}
+.cd-name{font-size:20px;font-weight:700;color:var(--t);flex:1;line-height:1.3}
+.cd-date{font-size:12px;color:var(--tm);margin-top:3px}
+.cd-empty{font-size:14px;color:var(--tm);font-style:italic}
+.cd-setup{display:none;margin-top:10px}
+.cd-setup input{width:100%;padding:9px 12px;border:1px solid var(--b);border-radius:var(--rads);font-size:14px;font-family:inherit;color:var(--t);background:var(--s2);margin-bottom:7px}
+.cd-setup input:focus{outline:none;border-color:var(--y)}
+.cd-setup .btns{display:flex;gap:8px}
+.cd-setup .btns button{padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer}
+.cdbtn-save{border:1.5px solid var(--y);background:rgba(251,191,36,.15);color:var(--y)}
+.cdbtn-clr{border:1px solid var(--b);background:transparent;color:var(--tm)}
+
+/* ── MOOD ── */
+.mood-wrap{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px;position:relative;overflow:hidden}
+.mood-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--a),transparent)}
+.mood-lbl{font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.mood-opts{display:flex;justify-content:space-between;gap:6px}
+.mood-btn{flex:1;aspect-ratio:1;border-radius:var(--rad);border:2px solid var(--b);background:var(--s2);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;-webkit-user-select:none}
+.mood-btn.sel{border-color:var(--p);background:rgba(244,114,182,.15);transform:scale(1.1)}
+.mood-btn:active{transform:scale(.95)}
+.mood-msg{margin-top:10px;font-size:13px;font-weight:700;color:var(--tm);text-align:center;min-height:20px}
+
+/* ── NAV TABS ── */
+.nav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.nav-tab{background:var(--s);border:1px solid var(--b);border-radius:var(--rads);padding:11px 4px 9px;text-align:center;cursor:pointer;transition:all .2s;-webkit-user-select:none;position:relative;overflow:hidden}
+.nav-tab::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--p);transform:scaleX(0);transition:transform .2s}
+.nav-tab.active{background:rgba(244,114,182,.1);border-color:var(--p)}
+.nav-tab.active::before{transform:scaleX(1)}
+.nav-tab .ti{font-size:24px;display:block;margin-bottom:3px}
+.nav-tab .tl{font-size:10px;font-weight:700;color:var(--tm);letter-spacing:.5px}
+.nav-tab.active .tl{color:var(--p)}
+.sec{display:none}.sec.active{display:block}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav-btn{width:38px;height:38px;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--p);font-weight:700}
+.cal-month{font-size:17px;font-weight:800;color:var(--t)}
+.cal-wds{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--tm);padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:12px}
+.cal-cell{aspect-ratio:1;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:14px;font-weight:700;color:var(--t);position:relative;transition:all .15s}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-cell.today{background:rgba(244,114,182,.2);border-color:var(--p);color:var(--p)}
+.cal-cell.sel:not(.today){background:rgba(192,132,252,.15);border-color:var(--a);color:var(--a)}
+.cal-cell.has-ev::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--p);position:absolute;bottom:3px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--tm)}
+.leg-dot{width:8px;height:8px;border-radius:2px}
+.day-panel{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:15px}
+.day-title{font-size:14px;font-weight:800;color:var(--t);margin-bottom:10px}
+.ev-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)}
+.ev-row:last-child{border-bottom:none}
+.ev-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;margin-top:4px}
+.ev-time{font-size:11px;color:var(--tm);font-weight:700;min-width:50px}
+.ev-name{font-size:14px;font-weight:700;color:var(--t)}
+.ev-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;display:inline-block;margin-top:2px;letter-spacing:1px}
+.b-school{background:rgba(244,114,182,.2);color:var(--p)}
+.b-class{background:rgba(147,197,253,.15);color:#93C5FD}
+.b-family{background:rgba(74,222,128,.15);color:var(--g)}
+.b-hw{background:rgba(251,191,36,.15);color:var(--y)}
+.no-ev{text-align:center;padding:18px;color:var(--tm);font-size:13px;font-weight:600}
+
+/* ── HOMEWORK ── */
+.hw-add{width:100%;padding:13px;border-radius:var(--rads);border:1px dashed var(--p);background:rgba(244,114,182,.05);font-size:13px;font-weight:700;color:var(--p);cursor:pointer;margin-bottom:12px}
+.hw-form{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:15px;margin-bottom:12px;display:none}
+.hw-form.open{display:block}
+.hw-form label{font-size:11px;font-weight:700;color:var(--tm);display:block;margin-bottom:4px;margin-top:10px;text-transform:uppercase;letter-spacing:1px}
+.hw-form label:first-child{margin-top:0}
+.hw-form input,.hw-form select{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:var(--rads);font-size:13px;font-family:inherit;color:var(--t);background:var(--s2);-webkit-appearance:none}
+.hw-form input:focus,.hw-form select:focus{outline:none;border-color:var(--p)}
+.hw-form-btns{display:flex;gap:10px;margin-top:13px}
+.hw-form-btns button{flex:1;padding:10px;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;border:1px solid}
+.hw-save{background:rgba(244,114,182,.15);color:var(--p);border-color:var(--p)}
+.hw-cancel{background:var(--s2);color:var(--tm);border-color:var(--b)}
+.hw-list{display:flex;flex-direction:column;gap:8px}
+.hw-card{background:var(--s);border:1px solid var(--b);border-radius:var(--rads);padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
+.hw-card.overdue{border-color:var(--r);background:rgba(251,113,133,.08)}
+.hw-card.due-today{border-color:var(--y);background:rgba(251,191,36,.08)}
+.hw-card.due-soon{border-color:var(--p);background:rgba(244,114,182,.05)}
+.hw-card.done{opacity:.4}
+.hw-card.done .hw-name{text-decoration:line-through}
+.hw-bar{width:4px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:44px}
+.hw-body{flex:1}
+.hw-name{font-size:15px;font-weight:700;color:var(--t)}
+.hw-due{font-size:11px;font-weight:700;margin-top:3px}
+.hw-due.overdue{color:var(--r)}.hw-due.due-today{color:var(--y)}.hw-due.due-soon{color:var(--p)}.hw-due.ok{color:var(--g)}
+.subj{font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;display:inline-block;margin-top:4px;letter-spacing:1px}
+.hw-tick{width:36px;height:36px;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;color:transparent;transition:all .2s}
+.hw-card.done .hw-tick{background:var(--g);border-color:var(--g);color:#0D0517}
+.hw-empty{text-align:center;padding:40px 20px}
+.hw-empty-icon{font-size:56px;margin-bottom:10px}
+.hw-empty-text{font-size:14px;font-weight:700;color:var(--tm)}
+
+/* ── SCHOOL/GCAL SETUP ── */
+.setup-card{background:var(--s);border:1px solid var(--b);border-radius:var(--rad);padding:15px;margin-bottom:12px}
+.setup-title{font-size:13px;font-weight:800;color:var(--p);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.setup-card p{font-size:12px;color:var(--tm);line-height:1.6;margin-bottom:8px}
+.setup-in{width:100%;padding:10px 12px;border:1px solid var(--b);border-radius:var(--rads);font-size:12px;font-family:inherit;color:var(--p);background:var(--s2);margin-bottom:8px}
+.setup-in:focus{outline:none;border-color:var(--p)}
+.setup-row{display:flex;gap:8px}
+.setup-btn{padding:10px 14px;border-radius:var(--rads);border:1px solid var(--p);background:rgba(244,114,182,.1);color:var(--p);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.setup-st{font-size:11px;margin-top:6px;font-weight:600}
+.setup-st.ok{color:var(--g)}.setup-st.err{color:var(--r)}
+
+/* ── CLOCK CARD (morning/evening countdown) ── */
+.clock-card{background:var(--s);border:2px solid var(--b);border-radius:var(--rad);padding:20px 18px 16px;margin-bottom:12px;display:none}
+.clock-card.visible{display:block}
+.clock-card-title{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px}
+.clock-card-sub{font-size:12px;color:var(--tm);text-align:center;margin-bottom:16px}
+.clock-layout{display:flex;align-items:center;gap:20px}
+.clock-time-big{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1}
+.clock-seg-bar{height:18px;border-radius:4px;background:var(--s2);overflow:hidden;border:1.5px solid var(--b);margin-top:4px}
+.clock-seg-fill{height:100%;border-radius:4px;transition:width 1s linear,background 1s}
+.ck-key{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.ck-key-item{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--tm)}
+.ck-key-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.time-info{background:var(--s);border:1.5px solid var(--b);border-radius:var(--rad);padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;color:var(--tm)}
+</style>
+</head>
+<body>
+<!-- PIN LOCK — change USER_PIN to Eva's 4-digit PIN -->
+<div id="pin-overlay" style="display:flex;position:fixed;inset:0;z-index:99999;flex-direction:column;align-items:center;justify-content:center;background:#0D0517;padding:32px 24px;text-align:center">
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(244,114,182,.12) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(192,132,252,.08) 0%,transparent 50%)"></div>
+  <div style="position:relative;z-index:1;width:100%;max-width:300px">
+    <div style="font-size:48px;margin-bottom:4px;animation:pin-float 3s ease-in-out infinite;display:inline-block">🌸</div>
+    <div style="font-size:24px;font-weight:800;color:#F472B6;margin-bottom:4px">Good morning ✨</div>
+    <div style="font-size:13px;color:#9D6BB8;margin-bottom:32px">Enter your PIN to continue</div>
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:20px" id="pin-dots">
+      <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div><div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
+    </div>
+    <div id="pin-err" style="height:18px;font-size:13px;font-weight:700;color:#FB7185;margin-bottom:14px;opacity:0;transition:opacity .3s"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto">
+      <button class="pb" onclick="pp('1')">1</button><button class="pb" onclick="pp('2')">2</button><button class="pb" onclick="pp('3')">3</button>
+      <button class="pb" onclick="pp('4')">4</button><button class="pb" onclick="pp('5')">5</button><button class="pb" onclick="pp('6')">6</button>
+      <button class="pb" onclick="pp('7')">7</button><button class="pb" onclick="pp('8')">8</button><button class="pb" onclick="pp('9')">9</button>
+      <button class="pb" onclick="pc()" style="background:rgba(251,113,133,.1);border-color:rgba(251,113,133,.3);color:#FB7185;font-size:20px">⌫</button>
+      <button class="pb" onclick="pp('0')">0</button>
+      <button class="pb" onclick="ps()" style="border-color:#F472B6;color:#F472B6;font-size:20px">✓</button>
+    </div>
+    <div style="margin-top:24px;font-size:11px;color:#9D6BB8;opacity:.6">Forgotten your PIN? Ask Mum or Dad 🌸</div>
+  </div>
+</div>
+<style>
+@keyframes pin-float{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+@keyframes pin-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.pd{width:18px;height:18px;border-radius:50%;border:2px solid #3B1F4E;background:transparent;transition:all .15s}
+.pd.f{background:#F472B6;border-color:#F472B6;transform:scale(1.1)}
+.pd.e{background:#FB7185;border-color:#FB7185}
+.pd.ok{background:#4ADE80;border-color:#4ADE80}
+.pb{aspect-ratio:1;border-radius:50%;border:1.5px solid #3B1F4E;background:#160B24;color:#FAF0FF;font-size:22px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;width:100%;font-family:-apple-system,sans-serif}
+.pb:active{transform:scale(.91);border-color:#F472B6}
+</style>
+<script>
+const USER_PIN='1234';   // ← Eva's PIN
+const MASTER_PIN='0000'; // ← Parent master PIN
+const SK='eva_pin_session';
+const SD=8*60*60*1000;
+let pb='';
+function chkSess(){try{const s=localStorage.getItem(SK);if(!s)return false;return Date.now()-JSON.parse(s).ts<SD}catch(e){return false}}
+function saveSess(){try{localStorage.setItem(SK,JSON.stringify({ts:Date.now()}))}catch(e){}}
+function unlock(){saveSess();const o=document.getElementById('pin-overlay');o.style.transition='opacity .4s';o.style.opacity='0';setTimeout(()=>o.style.display='none',400)}
+function ud(){for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pd'+(i<pb.length?' f':'')}
+function pp(d){if(pb.length>=4)return;pb+=d;ud();if(pb.length===4)setTimeout(ps,150)}
+function pc(){if(pb.length>0){pb=pb.slice(0,-1);ud()}}
+function ps(){
+  if(pb===USER_PIN||pb===MASTER_PIN){
+    for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pd ok';
+    setTimeout(unlock,500);
+  }else{
+    for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pd e';
+    document.getElementById('pin-dots').style.animation='pin-shake .4s ease';
+    const e=document.getElementById('pin-err');e.textContent='Incorrect PIN — try again';e.style.opacity='1';
+    setTimeout(()=>{pb='';ud();e.style.opacity='0';document.getElementById('pin-dots').style.animation=''},1300);
+  }
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('pin-overlay')||document.getElementById('pin-overlay').style.display==='none')return;
+  if(e.key>='0'&&e.key<='9')pp(e.key);else if(e.key==='Backspace')pc();else if(e.key==='Enter')ps();
+});
+if(chkSess())unlock();
+</script>
+
+<div class="deco d1">🌸</div>
+<div class="deco d2">🎨</div>
+<div class="deco d3">🎵</div>
+
+<div id="po">
+  <div class="ot" id="po-clk"></div>
+  <div class="od" id="po-date"></div>
+  <div class="oi">📱</div>
+  <h2>Phone handover time 🌸</h2>
+  <p>Hand your phone to Mum or Dad and get some rest 💜</p>
+  <button onclick="document.getElementById('po').classList.remove('show')">Mum / Dad — tap to dismiss</button>
+</div>
+
+<div class="app">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-id">
+        <div class="gr" id="gr">Good morning ☀️</div>
+        <div class="day" id="hero-day"></div>
+      </div>
+      <div class="hero-wx">
+        <div class="wx-icon" id="wx-icon">🌤️</div>
+        <div>
+          <div class="wx-temp" id="wx-temp">—°C</div>
+          <div class="wx-desc" id="wx-desc">Loading...</div>
+        </div>
+        <div class="wx-alerts" id="wx-alerts"></div>
+      </div>
+      <div class="hero-clk">
+        <div class="time" id="clk-time"></div>
+        <div class="date" id="clk-date"></div>
+      </div>
+    </div>
+    <div class="hero-div"></div>
+    <div class="wx-pills" id="wx-pills"><span style="font-size:12px;color:var(--tm);padding:0 2px">Loading weather...</span></div>
+  </div>
+
+  <!-- ROUTINE WIDGET — always visible, auto-expands by time -->
+  <div class="routine-widget" id="rt-widget">
+    <div class="rt-header" onclick="toggleRoutine()">
+      <div class="rt-emoji" id="rt-emoji">🌅</div>
+      <div class="rt-info">
+        <div class="rt-title" id="rt-title">Morning routine</div>
+        <div class="rt-sub" id="rt-sub">Tap to open</div>
+      </div>
+      <div class="rt-progress-ring">
+        <svg width="48" height="48" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="20" fill="none" stroke="var(--b)" stroke-width="4"/>
+          <circle id="rt-ring" cx="24" cy="24" r="20" fill="none" stroke="var(--p)" stroke-width="4"
+            stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="125.66"
+            transform="rotate(-90 24 24)" style="transition:stroke-dashoffset .5s,stroke .5s"/>
+        </svg>
+        <div class="rt-ring-count" id="rt-ring-count">0</div>
+      </div>
+    </div>
+    <!-- Collapsed progress bar (visible when closed) -->
+    <div class="rt-collapsed-bar" id="rt-cbar" style="display:none">
+      <div class="rt-collapsed-fill" id="rt-cbar-fill"></div>
+    </div>
+    <!-- Expandable body -->
+    <div class="rt-body" id="rt-body">
+      <div class="rt-body-inner">
+        <div class="rt-bar-wrap"><div class="rt-bar" id="rt-bar"></div></div>
+        <div class="rt-msg" id="rt-msg"></div>
+        <div class="rt-steps" id="rt-steps"></div>
+        <div class="rt-done" id="rt-done">🎉 All done! Amazing work! 🌸</div>
+        <button class="rt-reset" onclick="resetRoutine(event)">🔄 Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOCK CARD (morning/evening hour countdown) -->
+  <div class="clock-card" id="clock-card">
+    <div class="clock-card-title" id="cc-title"></div>
+    <div class="clock-card-sub" id="cc-sub"></div>
+    <div class="clock-layout">
+      <div style="flex-shrink:0">
+        <svg id="cc-svg" width="160" height="160" viewBox="0 0 160 160">
+          <circle cx="80" cy="80" r="68" fill="none" stroke="var(--s2)" stroke-width="14"/>
+          <circle id="cc-arc" cx="80" cy="80" r="68" fill="none" stroke="var(--p)" stroke-width="14"
+            stroke-linecap="square" stroke-dasharray="427.26" stroke-dashoffset="0" transform="rotate(-90 80 80)"/>
+          <circle cx="80" cy="80" r="52" fill="var(--s2)"/>
+          <text id="cc-min" x="80" y="72" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="28" font-weight="900" fill="var(--p)"></text>
+          <text x="80" y="90" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="9" font-weight="700" fill="var(--tm)">mins left</text>
+          <text id="cc-sec" x="80" y="106" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="var(--tm)"></text>
+        </svg>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div class="clock-time-big" id="cc-big"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--tm);margin-top:2px">remaining</div>
+        </div>
+        <div class="clock-seg-bar"><div class="clock-seg-fill" id="cc-seg"></div></div>
+        <div class="ck-key">
+          <div class="ck-key-item"><div class="ck-key-dot" style="background:var(--g)"></div>Plenty of time</div>
+          <div class="ck-key-item"><div class="ck-key-dot" style="background:var(--y)"></div>Getting close</div>
+          <div class="ck-key-item"><div class="ck-key-dot" style="background:var(--r)"></div>Hurry up!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="time-info" id="time-info" style="display:none">
+    <div style="font-size:26px" id="ti-icon"></div>
+    <div id="ti-text"></div>
+  </div>
+
+  <!-- BUS 825 -->
+  <div class="bus-widget" id="bus-widget">
+    <div id="bus-setup-state">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:22px">🚌</div>
+        <div><div style="font-size:14px;font-weight:800;color:var(--p)">Bus 825 — Beaumaris</div>
+          <div style="font-size:12px;color:var(--tm)">Enter PTV credentials to show live times</div></div>
+        <button onclick="toggleBusSetup()" style="margin-left:auto;padding:6px 12px;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);color:var(--tm);font-size:12px;font-weight:700;cursor:pointer">Setup</button>
+      </div>
+      <div id="bus-setup-form" style="display:none">
+        <input class="setup-in" id="ptv-devid" placeholder="PTV Developer ID" type="text" style="margin-bottom:6px"/>
+        <input class="setup-in" id="ptv-key" placeholder="PTV API Key (GUID)" type="text" style="margin-bottom:6px"/>
+        <select class="setup-in" id="ptv-stop" style="margin-bottom:6px">
+          <option value="18764">Sandringham College / Balcombe Rd</option>
+          <option value="18763">Reserve Rd / Balcombe Rd</option>
+          <option value="18762">Haydens Rd / Balcombe Rd</option>
+          <option value="18761">Keating St / Balcombe Rd</option>
+          <option value="18760">Morey St / Balcombe Rd</option>
+          <option value="custom">Other stop ID</option>
+        </select>
+        <input class="setup-in" id="ptv-stop-custom" placeholder="Custom stop ID" type="text" style="display:none;margin-bottom:6px"/>
+        <div style="display:flex;gap:8px">
+          <button class="setup-btn" onclick="savePtv()" style="flex:1">Connect</button>
+          <button onclick="toggleBusSetup()" style="padding:10px 14px;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);color:var(--tm);font-size:12px;font-weight:700;cursor:pointer">Cancel</button>
+        </div>
+        <div class="setup-st" id="ptv-status" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div id="bus-live" style="display:none">
+      <div id="bus-dis-bar" style="display:none;background:rgba(251,191,36,.15);border:1.5px solid var(--y);border-radius:var(--rads);padding:8px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--y)"></div>
+      <div style="display:flex;align-items:stretch;gap:12px">
+        <div style="flex-shrink:0;background:var(--s2);border:2px solid var(--p);border-radius:var(--rad);padding:14px 16px;text-align:center;min-width:90px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-size:10px;font-weight:700;color:var(--tm);letter-spacing:1px;margin-bottom:4px">NEXT 825</div>
+          <div style="font-size:48px;font-weight:900;letter-spacing:-2px;line-height:1;transition:color .5s" id="bus-num">—</div>
+          <div style="font-size:11px;font-weight:700;color:var(--tm);margin-top:3px" id="bus-unit">min</div>
+          <div style="font-size:13px;font-weight:700;color:var(--t);margin-top:6px" id="bus-time">—</div>
+          <div style="font-size:10px;color:var(--tm);margin-top:2px" id="bus-live-badge"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center" id="bus-following"></div>
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between">
+          <button onclick="loadBus()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--b);background:var(--s2);font-size:16px;cursor:pointer">🔄</button>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--tm)" id="bus-stop-lbl">—</div>
+            <div style="font-size:10px;color:var(--tm)" id="bus-upd">—</div>
+          </div>
+          <button onclick="toggleBusSetup()" style="padding:4px 8px;border-radius:var(--rads);border:1px solid var(--b);background:transparent;color:var(--tm);font-size:10px;cursor:pointer">⚙️</button>
+        </div>
+      </div>
+    </div>
+    <div id="bus-err" style="display:none;text-align:center;padding:10px">
+      <div style="font-size:13px;color:var(--r);font-weight:700" id="bus-err-msg"></div>
+      <button onclick="loadBus()" style="margin-top:8px;padding:6px 14px;border-radius:var(--rads);border:1px solid var(--b);background:var(--s2);color:var(--tm);font-size:12px;cursor:pointer">Retry</button>
+    </div>
+  </div>
+
+  <!-- SPOTIFY -->
+  <div class="spotify-wrap">
+    <div class="spotify-label">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      Music 🎵
+    </div>
+    <div style="border-radius:var(--rads);overflow:hidden">
+      <iframe style="border-radius:12px;display:block" src="https://open.spotify.com/embed/playlist/3VQRUNcKhHMg3wOL5UPdKg?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen allow="autoplay;clipboard-write;encrypted-media;fullscreen;picture-in-picture" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <!-- FOCUS -->
+  <div class="focus-wrap">
+    <div class="focus-lbl">
+      <span>✦ Today's focus</span>
+      <button onclick="toggleFocus()" id="focus-btn" style="padding:3px 10px;border-radius:99px;border:1px solid var(--b);background:transparent;color:var(--tm);font-size:11px;font-weight:700;cursor:pointer">Edit</button>
+    </div>
+    <div class="focus-text ph" id="focus-disp" onclick="toggleFocus()">Tap to set today's focus 🌸</div>
+    <div class="focus-edit" id="focus-edit">
+      <textarea id="focus-ta" placeholder="What's the one thing to focus on today?"></textarea>
+      <div class="btns">
+        <button class="fbtn-save" onclick="saveFocus()">Save ✓</button>
+        <button class="fbtn-clr" onclick="clearFocus()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="cd-wrap">
+    <div class="cd-lbl">
+      <span>⭐ Countdown</span>
+      <button onclick="toggleCd()" id="cd-btn" style="padding:3px 10px;border-radius:99px;border:1px solid var(--b);background:transparent;color:var(--tm);font-size:11px;font-weight:700;cursor:pointer">Edit</button>
+    </div>
+    <div id="cd-body" class="cd-body" style="display:none">
+      <div><div class="cd-num" id="cd-num">—</div><div class="cd-unit" id="cd-unit">days</div></div>
+      <div><div class="cd-name" id="cd-name"></div><div class="cd-date" id="cd-date"></div></div>
+    </div>
+    <div class="cd-empty" id="cd-empty">Set something to look forward to ⭐</div>
+    <div class="cd-setup" id="cd-setup">
+      <input type="text" id="cd-name-in" placeholder="What are you counting down to?"/>
+      <input type="date" id="cd-date-in"/>
+      <div class="btns">
+        <button class="cdbtn-save" onclick="saveCd()">Save ✓</button>
+        <button class="cdbtn-clr" onclick="clearCd()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOOD -->
+  <div class="mood-wrap">
+    <div class="mood-lbl">How are you feeling today?</div>
+    <div class="mood-opts">
+      <button class="mood-btn" onclick="setMood(0,'😴','Exhausted')" id="m0">😴</button>
+      <button class="mood-btn" onclick="setMood(1,'😐','Meh')" id="m1">😐</button>
+      <button class="mood-btn" onclick="setMood(2,'🙂','Okay')" id="m2">🙂</button>
+      <button class="mood-btn" onclick="setMood(3,'😊','Good')" id="m3">😊</button>
+      <button class="mood-btn" onclick="setMood(4,'🤩','Amazing')" id="m4">🤩</button>
+    </div>
+    <div class="mood-msg" id="mood-msg"></div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-tab active" onclick="show('cal')"><span class="ti">📅</span><span class="tl">Calendar</span></div>
+    <div class="nav-tab" onclick="show('hw')"><span class="ti">📚</span><span class="tl">Homework</span></div>
+    <div class="nav-tab" onclick="show('setup')"><span class="ti">⚙️</span><span class="tl">Setup</span></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="sec active" id="sec-cal">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="chgMo(-1)">‹</button>
+        <div class="cal-month" id="cal-month"></div>
+        <button class="cal-nav-btn" onclick="chgMo(1)">›</button>
+      </div>
+      <div class="cal-wds"><div class="cal-wd">MO</div><div class="cal-wd">TU</div><div class="cal-wd">WE</div><div class="cal-wd">TH</div><div class="cal-wd">FR</div><div class="cal-wd">SA</div><div class="cal-wd">SU</div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:var(--p)"></div>School</div>
+        <div class="leg"><div class="leg-dot" style="background:#93C5FD"></div>Class</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--g)"></div>Family</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--y)"></div>HW due</div>
+      </div>
+    </div>
+    <div class="day-panel" id="day-panel"></div>
+  </div>
+
+  <!-- HOMEWORK -->
+  <div class="sec" id="sec-hw">
+    <button class="hw-add" onclick="toggleHwForm()">+ Add homework</button>
+    <div class="hw-form" id="hw-form">
+      <label>Task</label><input type="text" id="hw-name" placeholder="e.g. Art portfolio"/>
+      <label>Subject</label>
+      <select id="hw-subj">
+        <option>Art</option><option>English</option><option>Maths</option><option>Science</option>
+        <option>Music</option><option>Drama</option><option>PE</option><option>Other</option>
+      </select>
+      <label>Due date</label><input type="date" id="hw-due"/>
+      <div class="hw-form-btns">
+        <button class="hw-save" onclick="addHw()">Add ✓</button>
+        <button class="hw-cancel" onclick="toggleHwForm()">Cancel</button>
+      </div>
+    </div>
+    <div class="hw-list" id="hw-list"></div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="sec" id="sec-setup">
+    <div class="setup-card">
+      <div class="setup-title">🏫 School Calendar</div>
+      <p>Connect Eva's school timetable and events.</p>
+      <input class="setup-in" id="sch-url" placeholder="School API URL" type="text"/>
+      <input class="setup-in" id="sch-key" placeholder="API Key" type="text"/>
+      <input class="setup-in" id="sch-sid" placeholder="Student ID (optional)" type="text"/>
+      <div class="setup-row"><button class="setup-btn" onclick="connectSchool()">Connect</button></div>
+      <div class="setup-st" id="sch-st"></div>
+    </div>
+    <div class="setup-card">
+      <div class="setup-title">📡 Family Calendar</div>
+      <p>Connect the shared family Google Calendar.</p>
+      <input class="setup-in" id="gc-key" placeholder="Google API Key" type="text"/>
+      <div class="setup-row">
+        <input class="setup-in" id="gc-id" placeholder="Calendar ID" type="text" style="margin-bottom:0"/>
+        <button class="setup-btn" onclick="connectGcal()">Connect</button>
+      </div>
+      <div class="setup-st" id="gc-st"></div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const MORNING=[
+  {e:'🛏️',n:'Wake up'},{e:'🪥',n:'Brush teeth'},{e:'💆',n:'Brush hair'},
+  {e:'🚿',n:'Wash face'},{e:'👕',n:'Get dressed'},{e:'🥣',n:'Eat breakfast'}
+];
+const EVENING=[
+  {e:'🎒',n:'Pack school bag'},{e:'🛁',n:'Shower or bath'},
+  {e:'🪥',n:'Brush teeth'},{e:'🎵',n:'Music or sketch'},{e:'🛏️',n:'Lights out'}
+];
+const MOOD_C=['#6A9AB8','#9D6BB8','#4ADE80','#F472B6','#FBBF24'];
+const SUBJ_C={Art:['rgba(244,114,182,.2)','#F472B6'],English:['rgba(192,132,252,.2)','#C084FC'],
+  Maths:['rgba(96,165,250,.2)','#60A5FA'],Science:['rgba(74,222,128,.2)','#4ADE80'],
+  Music:['rgba(251,191,36,.2)','#FBBF24'],Drama:['rgba(251,146,60,.2)','#FB923C'],
+  PE:['rgba(52,211,153,.2)','#34D399'],Other:['rgba(160,120,88,.2)','#A07858']};
+const LAT=-37.8136,LNG=144.9631,CIRC=2*Math.PI*68,RING_C=125.66;
+const PTV_BASE='https://timetableapi.ptv.vic.gov.au',PTV_ROUTE=7149,PTV_TYPE=2;
+const STOP_N={'18764':'Sandringham College','18763':'Reserve Rd','18762':'Haydens Rd','18761':'Keating St','18760':'Morey St'};
+
+// ── HELPERS ──────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+const dayKey=()=>{const n=new Date();return n.getFullYear()+'-'+n.getMonth()+'-'+n.getDate()};
+const fmtTime=d=>d.toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit',hour12:true});
+const fmtMSS=s=>{const m=Math.floor(s/60),sc=s%60;return m+':'+(sc<10?'0'+sc:sc)};
+
+// ── CLOCK ────────────────────────────────────────────────────────
+let overlayShown=false;
+function tick(){
+  const N=new Date(),h=N.getHours(),m=N.getMinutes(),s=N.getSeconds(),dow=N.getDay(),wd=dow>=1&&dow<=5;
+  const h12=h%12||12,ms=m<10?'0'+m:''+m,ap=h>=12?'PM':'AM';
+  $('clk-time').textContent=h12+':'+ms+' '+ap;
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  $('clk-date').textContent=N.getDate()+' '+MO[N.getMonth()];
+  $('hero-day').textContent=DAYS[dow];
+  $('gr').textContent=h<12?'Good morning ☀️':h<17?'Good afternoon 🌸':'Good evening 🌙';
+  $('po-clk').textContent=h12+':'+ms+' '+ap;
+  $('po-date').textContent=DAYS[dow]+' '+N.getDate()+' '+MO[N.getMonth()];
+
+  // Phone handover 9pm weekdays
+  const handover=wd&&h===21&&m===0&&s<30;
+  if(handover&&!overlayShown){overlayShown=true;$('po').classList.add('show')}
+  if(h===21&&m>=2)overlayShown=false;
+
+  // Countdown clock card
+  const inMorn=wd&&h===7,inEve=wd&&h===20;
+  const cc=$('clock-card'),ti=$('time-info');
+  if(inMorn||inEve){
+    cc.classList.add('visible');ti.style.display='none';
+    const el=m*60+s,rem=3600-el,pct=el/3600;
+    const col=pct<.333?'#4ADE80':pct<.667?'#FBBF24':'#FB7185';
+    $('cc-arc').setAttribute('stroke',col);
+    $('cc-arc').setAttribute('stroke-dashoffset',(CIRC*pct).toFixed(2));
+    $('cc-min').textContent=Math.ceil(rem/60);
+    $('cc-min').setAttribute('fill',col);
+    $('cc-sec').textContent=fmtMSS(rem);
+    $('cc-big').textContent=fmtMSS(rem);
+    $('cc-big').style.color=col;
+    $('cc-seg').style.width=((1-pct)*100).toFixed(1)+'%';
+    $('cc-seg').style.background=col;
+    $('cc-title').textContent=inMorn?'⏰ Morning window':'🌙 Evening window';
+    $('cc-sub').textContent=inMorn?'School starts soon — let\'s go!':'Wind down time 🌸';
+  } else {
+    cc.classList.remove('visible');
+    renderInfoBar(h,wd,ti);
+  }
+
+  // Auto-expand routine by time of day
+  syncRoutineToTime(h,wd);
+}
+setInterval(tick,1000);tick();
+
+function renderInfoBar(h,wd,el){
+  el.style.display='flex';
+  const map=[
+    [!wd,{i:'🎨',t:'Weekend — free time for art and music 🎵'}],
+    [h<7,{i:'🌙',t:'Morning routine starts at 7:00 AM 🌸'}],
+    [h>=8&&h<20,{i:'🌸',t:'Have a great day! Evening routine starts at 8:00 PM.'}],
+    [h>=21,{i:'💜',t:'Sweet dreams! 🌸'}],
+  ];
+  const hit=map.find(([c])=>c);
+  const{i,t}=hit?hit[1]:{i:'✨',t:'See you soon!'};
+  $('ti-icon').textContent=i;$('ti-text').textContent=t;
+}
+
+// ── ROUTINE ──────────────────────────────────────────────────────
+let rtOpen=false,rtMode='morning'; // mode: 'morning' | 'evening'
+
+function syncRoutineToTime(h,wd){
+  const wantMorn=h>=6&&h<9,wantEve=h>=20&&h<22;
+  const newMode=wantEve?'evening':'morning';
+  if(newMode!==rtMode){rtMode=newMode;renderRoutineShell()}
+  // Auto-open during routine windows on weekdays, close outside
+  const shouldOpen=wd&&(wantMorn||wantEve);
+  if(shouldOpen&&!rtOpen)openRoutine();
+  // Don't auto-close if user manually opened
+}
+
+function renderRoutineShell(){
+  const isMorn=rtMode==='morning';
+  const w=$('rt-widget');
+  w.className='routine-widget '+(isMorn?'morning-active':'evening-active');
+  $('rt-emoji').textContent=isMorn?'🌅':'🌙';
+  $('rt-title').textContent=isMorn?'Morning routine':'Evening routine';
+  $('cc-arc').setAttribute('stroke',isMorn?'var(--p)':'var(--a)');
+  $('rt-ring').setAttribute('stroke',isMorn?'var(--p)':'var(--a)');
+  renderRoutineSteps();
+}
+
+function renderRoutineSteps(){
+  const steps=rtMode==='morning'?MORNING:EVENING;
+  const key='eva_'+(rtMode==='morning'?'morn':'eve')+'_'+dayKey();
+  const saved=ls(key);
+  const done=saved?JSON.parse(saved):Array(steps.length).fill(false);
+  const dc=done.filter(Boolean).length,total=steps.length,pct=Math.round(dc/total*100);
+
+  // Ring
+  const offset=RING_C*(1-dc/total);
+  $('rt-ring').setAttribute('stroke-dashoffset',offset.toFixed(2));
+  $('rt-ring-count').textContent=dc+'/'+total;
+
+  // Progress bar
+  const col=pct>=100?'#4ADE80':pct>=66?(rtMode==='morning'?'#F472B6':'#C084FC'):pct>=33?'#FBBF24':'#FB7185';
+  $('rt-bar').style.width=pct+'%';$('rt-bar').style.background=col;
+  $('rt-cbar-fill').style.width=pct+'%';$('rt-cbar-fill').style.background=col;
+
+  // Message
+  const msgs=['Let\'s go! 🌸','Great start! ✨','Making progress! 🌸','Nearly there! ✨','All done! 🎉'];
+  $('rt-msg').textContent=msgs[Math.min(4,Math.floor(pct/25))];
+
+  // Done banner
+  const doneEl=$('rt-done');
+  doneEl.className='rt-done'+(pct>=100?' show':'');
+
+  // Sub-label
+  $('rt-sub').textContent=pct>=100?'✓ Complete!':`${dc} of ${total} done`;
+
+  // Steps
+  const list=$('rt-steps');list.innerHTML='';
+  steps.forEach((s,i)=>{
+    const d=done[i];
+    const el=document.createElement('div');
+    el.className='rt-step'+(d?' done':'');
+    el.innerHTML=`<div class="rt-step-icon">${s.e}</div><div class="rt-step-name">${s.n}</div><div class="rt-check">✓</div>`;
+    el.addEventListener('click',()=>{
+      done[i]=!done[i];
+      ls(key,JSON.stringify(done));
+      renderRoutineSteps();
+    });
+    list.appendChild(el);
+  });
+
+  // Save state
+  ls(key,JSON.stringify(done));
+}
+
+function openRoutine(){
+  rtOpen=true;
+  $('rt-body').classList.add('open');
+  $('rt-cbar').style.display='none';
+}
+function closeRoutine(){
+  rtOpen=false;
+  $('rt-body').classList.remove('open');
+  $('rt-cbar').style.display='block';
+}
+function toggleRoutine(){rtOpen?closeRoutine():openRoutine()}
+function resetRoutine(e){
+  e.stopPropagation();
+  const key='eva_'+(rtMode==='morning'?'morn':'eve')+'_'+dayKey();
+  ls(key,JSON.stringify(Array(rtMode==='morning'?MORNING.length:EVENING.length).fill(false)));
+  renderRoutineSteps();
+}
+
+// Init routine
+renderRoutineShell();
+
+// ── WEATHER ──────────────────────────────────────────────────────
+const wmoIcon=c=>c===0?'☀️':c<=2?'⛅':c<=3?'☁️':c<=49?'🌫️':c<=69?'🌧️':'⛈️';
+const wmoDesc=c=>c===0?'Clear sky':c<=2?'Partly cloudy':c<=3?'Overcast':c<=49?'Foggy':c<=69?'Rainy':'Stormy';
+const uvLevel=u=>u<=2?{l:'Low UV',c:'#4ADE80',b:'rgba(74,222,128,.15)'}:u<=5?{l:'Moderate UV',c:'#FBBF24',b:'rgba(251,191,36,.15)'}:u<=7?{l:'High UV',c:'#FB923C',b:'rgba(251,146,60,.15)'}:{l:'Very high UV',c:'#FB7185',b:'rgba(251,113,133,.15)'};
+
+async function loadWeather(){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m&daily=uv_index_max,precipitation_sum,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`);
+    const{current:c,daily:d}=await r.json();
+    $('wx-icon').textContent=wmoIcon(c.weathercode);
+    $('wx-temp').textContent=Math.round(c.temperature_2m)+'°C';
+    $('wx-desc').textContent=wmoDesc(c.weathercode)+' · '+Math.round(c.apparent_temperature)+'°C feels';
+    const alerts=[];
+    if(d.precipitation_sum[0]>0.5)alerts.push({i:'☂️',l:'Umbrella',c:'#93C5FD',b:'rgba(147,197,253,.15)'});
+    if(Math.round(c.temperature_2m)<15)alerts.push({i:'🧥',l:'Coat',c:'#C4B5FD',b:'rgba(196,181,253,.15)'});
+    if(Math.round(c.temperature_2m)<8)alerts.push({i:'🧣',l:'Scarf',c:'#A78BFA',b:'rgba(167,139,250,.15)'});
+    const uv=uvLevel(Math.round(d.uv_index_max[0]));
+    if(Math.round(d.uv_index_max[0])>=3)alerts.push({i:'🧴',l:'Sunscreen',c:uv.c,b:uv.b});
+    if(Math.round(d.uv_index_max[0])>=6)alerts.push({i:'🕶️',l:'Sunnies',c:'#FBBF24',b:'rgba(251,191,36,.15)'});
+    const ae=$('wx-alerts');ae.innerHTML='';
+    alerts.forEach(a=>{const el=document.createElement('div');el.className='wx-alert';el.style.background=a.b;el.style.color=a.c;el.innerHTML=`<span style="font-size:15px">${a.i}</span><span>${a.l}</span>`;ae.appendChild(el)});
+    const pills=[
+      {i:'🌡️',l:`${Math.round(d.temperature_2m_min[0])}–${Math.round(d.temperature_2m_max[0])}°C today`},
+      {i:'💨',l:`${Math.round(c.windspeed_10m)} km/h`},
+      {i:'🌂',l:d.precipitation_sum[0]>0?d.precipitation_sum[0]+'mm rain':'No rain'},
+      {i:'☀️',l:`UV ${Math.round(d.uv_index_max[0])} — ${uv.l}`,c:uv.c}
+    ];
+    const pe=$('wx-pills');pe.innerHTML='';
+    pills.forEach(p=>{const el=document.createElement('div');el.className='wx-pill';if(p.c)el.style.color=p.c;el.innerHTML=`<span>${p.i}</span>${p.l}`;pe.appendChild(el)});
+  }catch(e){$('wx-pills').innerHTML='<span style="font-size:12px;color:var(--tm)">Weather unavailable</span>'}
+}
+loadWeather();setInterval(loadWeather,30*60*1000);
+
+// ── NAV ──────────────────────────────────────────────────────────
+function show(name){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  $('sec-'+name).classList.add('active');
+  const idx={cal:0,hw:1,setup:2}[name];
+  document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if(name==='hw')renderHw();
+}
+
+// ── CALENDAR ──────────────────────────────────────────────────────
+let schoolEvs={},gcalEvs={},schoolUrl='',schoolKey='',schoolSid='',gcalKey='',gcalId='';
+const TODAY=new Date();let viewY=TODAY.getFullYear(),viewM=TODAY.getMonth(),selD=TODAY.getDate();
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SAMPLE_EVS=(()=>{
+  const n=new Date(),y=n.getFullYear(),m=n.getMonth(),d=n.getDate(),ev={};
+  const add=(dy,t,nm,tp)=>{const k=y+'-'+m+'-'+(d+dy);if(!ev[k])ev[k]=[];ev[k].push({time:t,name:nm,type:tp})};
+  add(0,'9:00 AM','Art class','school');add(0,'3:30 PM','Swimming','family');
+  add(1,'9:00 AM','English','class');add(1,'6:00 PM','Family dinner','family');
+  add(3,'All day','Art project due','hw');
+  return ev;
+})();
+
+function getEvs(y,m,d){
+  const k=`${y}-${m}-${d}`;
+  const s=Object.keys(schoolEvs).length?schoolEvs[k]||[]:[];
+  const g=gcalKey&&gcalId?gcalEvs[k]||[]:SAMPLE_EVS[k]||[];
+  return[...s,...g];
+}
+
+function chgMo(dir){viewM+=dir;if(viewM>11){viewM=0;viewY++}if(viewM<0){viewM=11;viewY--}renderCal()}
+
+function renderCal(){
+  $('cal-month').textContent=MN[viewM]+' '+viewY;
+  const grid=$('cal-grid');grid.innerHTML='';
+  const fd=new Date(viewY,viewM,1).getDay(),off=fd===0?6:fd-1,dim=new Date(viewY,viewM+1,0).getDate();
+  for(let i=0;i<off;i++){const b=document.createElement('div');b.className='cal-cell empty';grid.appendChild(b)}
+  for(let d=1;d<=dim;d++){
+    const cell=document.createElement('div');cell.className='cal-cell';cell.textContent=d;
+    const isT=d===TODAY.getDate()&&viewM===TODAY.getMonth()&&viewY===TODAY.getFullYear();
+    const isS=d===selD&&viewM===TODAY.getMonth()&&viewY===TODAY.getFullYear();
+    if(isT)cell.classList.add('today');if(isS&&!isT)cell.classList.add('sel');
+    if(getEvs(viewY,viewM,d).length)cell.classList.add('has-ev');
+    cell.addEventListener('click',()=>{selD=d;renderCal();renderDay(viewY,viewM,d)});
+    grid.appendChild(cell);
+  }
+  renderDay(viewY,viewM,selD);
+}
+
+function renderDay(y,m,d){
+  const evs=getEvs(y,m,d),p=$('day-panel');
+  const date=new Date(y,m,d);
+  const tc={school:'var(--p)',class:'#93C5FD',family:'var(--g)',hw:'var(--y)',other:'var(--tm)'};
+  const tb={school:'b-school',class:'b-class',family:'b-family',hw:'b-hw',other:'b-hw'};
+  const tl={school:'School',class:'Class',family:'Family',hw:'HW due',other:'Event'};
+  let html=`<div class="day-title">${DN[date.getDay()]}, ${d} ${MN[m]}</div>`;
+  if(!evs.length){html+='<div class="no-ev">🌸 Nothing on — free time!</div>'}
+  else evs.forEach(ev=>{
+    html+=`<div class="ev-row"><div class="ev-dot" style="background:${tc[ev.type||'other']}"></div>
+      <div class="ev-time">${ev.time}</div>
+      <div><div class="ev-name">${ev.name}</div>
+      <span class="ev-badge ${tb[ev.type||'other']}">${tl[ev.type||'other']}</span></div></div>`;
+  });
+  p.innerHTML=html;
+}
+renderCal();
+
+async function connectSchool(){
+  schoolUrl=$('sch-url').value.trim();schoolKey=$('sch-key').value.trim();schoolSid=$('sch-sid').value.trim();
+  if(!schoolUrl||!schoolKey){setSt('sch-st','Please enter URL and key.',false);return}
+  ls('eva_school_url',schoolUrl);ls('eva_school_key',schoolKey);ls('eva_school_sid',schoolSid);
+  setSt('sch-st','Connecting...',null);
+  try{await fetchSchool();setSt('sch-st','Connected ✓',true)}catch{setSt('sch-st','Could not connect.',false)}
+}
+async function fetchSchool(){
+  const n=new Date(),start=new Date(n.getFullYear(),n.getMonth(),1).toISOString().split('T')[0],end=new Date(n.getFullYear(),n.getMonth()+2,0).toISOString().split('T')[0];
+  let url=schoolUrl+'?start='+start+'&end='+end;if(schoolSid)url+='&student_id='+encodeURIComponent(schoolSid);
+  const res=await fetch(url,{headers:{'Authorization':'Bearer '+schoolKey,'X-API-Key':schoolKey}});
+  if(!res.ok)throw new Error('err');
+  const data=await res.json();schoolEvs={};
+  (Array.isArray(data)?data:(data.events||data.data||data.items||[])).forEach(item=>{
+    const st=item.start||item.startDate||item.date||'';if(!st)return;
+    const d=new Date(st),k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+    if(!schoolEvs[k])schoolEvs[k]=[];
+    const t=item.startTime||item.start_time||(item.allDay?'All day':fmtTime(new Date(st)));
+    schoolEvs[k].push({time:t,name:item.title||item.name||item.summary||'Event',type:'school'});
+  });
+  renderCal();
+}
+
+async function connectGcal(){
+  gcalKey=$('gc-key').value.trim();gcalId=$('gc-id').value.trim();
+  if(!gcalKey||!gcalId){setSt('gc-st','Please enter both values.',false);return}
+  ls('eva_gcal_key',gcalKey);ls('eva_gcal_id',gcalId);
+  setSt('gc-st','Connecting...',null);
+  try{await fetchGcal();setSt('gc-st','Connected ✓',true)}catch{setSt('gc-st','Could not connect.',false)}
+}
+async function fetchGcal(){
+  const n=new Date(),start=new Date(n.getFullYear(),n.getMonth(),1).toISOString(),end=new Date(n.getFullYear(),n.getMonth()+2,0).toISOString();
+  const url=`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gcalId)}/events?key=${gcalKey}&timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime&maxResults=100`;
+  const res=await fetch(url);if(!res.ok)throw new Error('err');
+  const data=await res.json();gcalEvs={};
+  (data.items||[]).forEach(item=>{
+    const st=item.start.dateTime||item.start.date,d=new Date(st),k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+    if(!gcalEvs[k])gcalEvs[k]=[];
+    const t=item.start.dateTime?fmtTime(new Date(item.start.dateTime)):'All day';
+    const s=(item.summary||'').toLowerCase();
+    const tp=/class|lesson|school/.test(s)?'school':/family|dinner|swim|sport/.test(s)?'family':/due|hw|project|test/.test(s)?'hw':'other';
+    gcalEvs[k].push({time:t,name:item.summary||'Event',type:tp});
+  });
+  renderCal();
+}
+
+// Load saved creds
+try{
+  schoolUrl=ls('eva_school_url')||'';schoolKey=ls('eva_school_key')||'';schoolSid=ls('eva_school_sid')||'';
+  if(schoolUrl&&schoolKey){$('sch-url').value=schoolUrl;$('sch-key').value=schoolKey;$('sch-sid').value=schoolSid;fetchSchool().catch(()=>{})}
+  gcalKey=ls('eva_gcal_key')||'';gcalId=ls('eva_gcal_id')||'';
+  if(gcalKey&&gcalId){$('gc-key').value=gcalKey;$('gc-id').value=gcalId;fetchGcal().catch(()=>{})}
+}catch(e){}
+
+function setSt(id,msg,ok){const el=$(id);el.textContent=msg;el.className='setup-st'+(ok===true?' ok':ok===false?' err':'')}
+
+// ── HOMEWORK ──────────────────────────────────────────────────────
+let hwItems=[],hwId=1,hwOpen=false;
+function loadHw(){try{const s=ls('eva_homework');if(s){hwItems=JSON.parse(s);hwId=hwItems.length?Math.max(...hwItems.map(h=>h.id))+1:1}}catch(e){}if(!hwItems.length)hwItems=[{id:1,name:'Art portfolio',subject:'Art',due:duePlus(3),done:false},{id:2,name:'English essay',subject:'English',due:duePlus(5),done:false}];hwId=Math.max(...hwItems.map(h=>h.id))+1}
+function saveHw(){try{ls('eva_homework',JSON.stringify(hwItems))}catch(e){}}
+function duePlus(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0]}
+function daysUntil(ds){const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);return Math.round((d-n)/86400000)}
+function toggleHwForm(){hwOpen=!hwOpen;$('hw-form').className='hw-form'+(hwOpen?' open':'');if(hwOpen)$('hw-due').value=duePlus(1)}
+function addHw(){
+  const name=$('hw-name').value.trim(),subj=$('hw-subj').value,due=$('hw-due').value;
+  if(!name||!due)return;
+  hwItems.push({id:hwId++,name,subject:subj,due,done:false});
+  $('hw-name').value='';toggleHwForm();renderHw();saveHw();
+}
+function renderHw(){
+  const list=$('hw-list'),sorted=hwItems.filter(h=>!h.done).concat(hwItems.filter(h=>h.done)).sort((a,b)=>!a.done&&!b.done?new Date(a.due)-new Date(b.due):0);
+  if(!sorted.length){list.innerHTML='<div class="hw-empty"><div class="hw-empty-icon">🎨</div><div class="hw-empty-text">All done — time to draw! 🌸</div></div>';return}
+  list.innerHTML='';
+  sorted.forEach(hw=>{
+    const days=daysUntil(hw.due);
+    let uc='#4ADE80',cc='',dl='Due in '+days+' day'+(days===1?'':'s');
+    if(days<0){uc='#FB7185';cc='overdue';dl='Overdue!'}else if(days===0){uc='#FBBF24';cc='due-today';dl='Due today!'}else if(days<=2){uc='var(--p)';cc='due-soon'}
+    const sc=SUBJ_C[hw.subject]||SUBJ_C.Other;
+    const card=document.createElement('div');card.className='hw-card '+cc+(hw.done?' done':'');
+    card.innerHTML=`<div class="hw-bar" style="background:${uc}"></div>
+      <div class="hw-body"><div class="hw-name">${hw.name}</div>
+      <div class="hw-due ${cc||'ok'}">${dl}</div>
+      <span class="subj" style="background:${sc[0]};color:${sc[1]}">${hw.subject.toUpperCase()}</span></div>
+      <div class="hw-tick">✓</div>`;
+    card.addEventListener('click',()=>{hw.done=!hw.done;renderHw();saveHw()});
+    list.appendChild(card);
+  });
+}
+loadHw();renderHw();
+
+// ── PTV BUS ──────────────────────────────────────────────────────
+let ptvDev='',ptvKey='',ptvStop='18764';
+async function ptvSign(ep){
+  const url=ep+'&devid='+ptvDev;
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(ptvKey),{name:'HMAC',hash:'SHA-1'},false,['sign']);
+  const sig=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(url));
+  return PTV_BASE+url+'&signature='+Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function toggleBusSetup(){const f=$('bus-setup-form');f.style.display=f.style.display==='none'?'block':'none'}
+$('ptv-stop').addEventListener('change',function(){$('ptv-stop-custom').style.display=this.value==='custom'?'block':'none'});
+function setPtvSt(m,ok){const el=$('ptv-status');el.textContent=m;el.className='setup-st'+(ok===true?' ok':ok===false?' err':'')}
+function savePtv(){
+  ptvDev=$('ptv-devid').value.trim();ptvKey=$('ptv-key').value.trim();
+  const sel=$('ptv-stop').value;ptvStop=sel==='custom'?$('ptv-stop-custom').value.trim():sel;
+  if(!ptvDev||!ptvKey){setPtvSt('Enter Dev ID and API Key.',false);return}
+  ls('eva_ptv_devid',ptvDev);ls('eva_ptv_key',ptvKey);ls('eva_ptv_stop',ptvStop);
+  setPtvSt('Connecting...',null);
+  loadBus().then(()=>{setPtvSt('Connected ✓',true);$('bus-setup-form').style.display='none'}).catch(()=>setPtvSt('Could not connect. Check your credentials.',false));
+}
+async function loadBus(){
+  if(!ptvDev||!ptvKey)return;
+  $('bus-err').style.display='none';
+  try{
+    const url=await ptvSign(`/v3/departures/route_type/${PTV_TYPE}/stop/${ptvStop}?route_id=${PTV_ROUTE}&max_results=5&expand=run`);
+    const res=await fetch(url);if(!res.ok)throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const now=new Date(),deps=(data.departures||[]).filter(d=>new Date(d.estimated_departure_utc||d.scheduled_departure_utc)>now);
+    $('bus-setup-state').style.display='none';$('bus-live').style.display='block';
+    $('bus-stop-lbl').textContent=STOP_N[ptvStop]||'Stop '+ptvStop;
+    $('bus-upd').textContent='Updated '+fmtTime(now);
+    if(!deps.length){$('bus-num').textContent='—';$('bus-time').textContent='No services';return}
+    const f=deps[0],ft=new Date(f.estimated_departure_utc||f.scheduled_departure_utc);
+    const mins=Math.max(0,Math.round((ft-now)/60000)),live=!!f.estimated_departure_utc;
+    const num=$('bus-num');num.textContent=mins<=1?'NOW':mins;
+    num.style.color=mins<=2?'#FB7185':mins<=5?'#FBBF24':'var(--p)';
+    $('bus-unit').textContent=mins<=1?'':'min';
+    $('bus-time').textContent=fmtTime(ft);
+    $('bus-live-badge').textContent=live?'● Live':'Scheduled';
+    $('bus-live-badge').style.color=live?'#4ADE80':'var(--tm)';
+    const fl=$('bus-following');fl.innerHTML='';
+    deps.slice(1,4).forEach(dep=>{
+      const t=new Date(dep.estimated_departure_utc||dep.scheduled_departure_utc);
+      const m=Math.max(0,Math.round((t-now)/60000)),lv=!!dep.estimated_departure_utc;
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--s2);border-radius:var(--rads);gap:8px';
+      row.innerHTML=`<span style="font-size:22px;font-weight:800;color:${m<=5?'#FBBF24':'var(--t)'};min-width:36px">${m}m</span>
+        <span style="font-size:13px;font-weight:600;color:var(--t);flex:1">${fmtTime(t)}</span>
+        <span style="font-size:10px;font-weight:700;color:${lv?'#4ADE80':'var(--tm)'}">${lv?'Live':'Sch'}</span>`;
+      fl.appendChild(row);
+    });
+    // disruptions
+    try{
+      const du=await ptvSign(`/v3/disruptions/route_type/${PTV_TYPE}?disruption_status=current`);
+      const dr=await fetch(du);if(!dr.ok)return;
+      const dd=await dr.json();
+      const r825=[...(dd.disruptions?.metro_bus||[]),...(dd.disruptions?.bus||[])].filter(d=>d.routes?.some(r=>r.route_number==='825'));
+      const bar=$('bus-dis-bar');
+      if(r825.length){bar.style.display='block';bar.textContent='⚠️ '+(r825[0].title||'Disruption on route 825')}else bar.style.display='none';
+    }catch(e){}
+  }catch(err){
+    $('bus-live').style.display='none';$('bus-setup-state').style.display='block';
+    $('bus-err').style.display='block';$('bus-err-msg').textContent='Could not load: '+err.message;
+    throw err;
+  }
+}
+setInterval(()=>{if(ptvDev&&ptvKey)loadBus().catch(()=>{})},60000);
+try{
+  ptvDev=ls('eva_ptv_devid')||'';ptvKey=ls('eva_ptv_key')||'';ptvStop=ls('eva_ptv_stop')||'18764';
+  if(ptvDev&&ptvKey){
+    $('ptv-devid').value=ptvDev;$('ptv-key').value=ptvKey;
+    const sel=$('ptv-stop');let found=false;
+    for(let i=0;i<sel.options.length;i++)if(sel.options[i].value===ptvStop){sel.selectedIndex=i;found=true;break}
+    if(!found){sel.value='custom';$('ptv-stop-custom').value=ptvStop;$('ptv-stop-custom').style.display='block'}
+    $('bus-setup-state').style.display='none';$('bus-live').style.display='block';
+    loadBus().catch(()=>{});
+  }
+}catch(e){}
+
+// ── FOCUS ────────────────────────────────────────────────────────
+function focusKey(){return'eva_focus_'+dayKey()}
+function renderFocus(){
+  const t=ls(focusKey())||'';const d=$('focus-disp');
+  if(t){d.textContent=t;d.className='focus-text';$('focus-btn').textContent='Edit'}
+  else{d.textContent='Tap to set today\'s focus 🌸';d.className='focus-text ph';$('focus-btn').textContent='Set'}
+}
+function toggleFocus(){
+  const e=$('focus-edit'),open=e.style.display==='block';
+  e.style.display=open?'none':'block';
+  if(!open){try{$('focus-ta').value=ls(focusKey())||''}catch(e){};$('focus-ta').focus()}
+  $('focus-btn').textContent=open?'Edit':'Cancel';
+}
+function saveFocus(){const t=$('focus-ta').value.trim();if(t)ls(focusKey(),t);else try{localStorage.removeItem(focusKey())}catch(e){};$('focus-edit').style.display='none';renderFocus()}
+function clearFocus(){$('focus-ta').value='';try{localStorage.removeItem(focusKey())}catch(e){};$('focus-edit').style.display='none';renderFocus()}
+renderFocus();
+
+// ── COUNTDOWN ────────────────────────────────────────────────────
+function renderCd(){
+  const name=ls('eva_cd_name')||'',date=ls('eva_cd_date')||'';
+  const body=$('cd-body'),empty=$('cd-empty');
+  if(!name||!date){body.style.display='none';empty.style.display='block';return}
+  const target=new Date(date),today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.ceil((target-today)/86400000);
+  body.style.display='flex';empty.style.display='none';
+  const num=$('cd-num');
+  if(diff<0){num.textContent='🎉';num.style.fontSize='48px';$('cd-unit').textContent='happened!'}
+  else if(diff===0){num.textContent='TODAY';num.style.fontSize='28px';$('cd-unit').textContent='🎉🎉🎉'}
+  else{num.textContent=diff;num.style.fontSize=diff>99?'48px':'64px';$('cd-unit').textContent=diff===1?'day':'days'}
+  num.style.color=diff<=3?'var(--p)':diff<=14?'var(--y)':'var(--a)';
+  $('cd-name').textContent=name;
+  $('cd-date').textContent=target.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function toggleCd(){const s=$('cd-setup'),open=s.style.display==='block';s.style.display=open?'none':'block';if(!open){$('cd-name-in').value=ls('eva_cd_name')||'';$('cd-date-in').value=ls('eva_cd_date')||''}$('cd-btn').textContent=open?'Edit':'Cancel'}
+function saveCd(){const n=$('cd-name-in').value.trim(),d=$('cd-date-in').value;if(!n||!d)return;ls('eva_cd_name',n);ls('eva_cd_date',d);$('cd-setup').style.display='none';$('cd-btn').textContent='Edit';renderCd()}
+function clearCd(){try{localStorage.removeItem('eva_cd_name');localStorage.removeItem('eva_cd_date')}catch(e){};$('cd-setup').style.display='none';$('cd-btn').textContent='Edit';renderCd()}
+renderCd();setInterval(renderCd,3600000);
+
+// ── MOOD ─────────────────────────────────────────────────────────
+const MOOD_L=['Exhausted','Meh','Okay','Good','Amazing!'];
+function moodKey(){return'eva_mood_'+dayKey()}
+function setMood(i,em,label){
+  for(let j=0;j<5;j++){const b=$('m'+j);b.classList.remove('sel');b.style.borderColor='';b.style.background=''}
+  const btn=$('m'+i);btn.classList.add('sel');btn.style.borderColor=MOOD_C[i];btn.style.background=MOOD_C[i]+'22';
+  try{ls(moodKey(),JSON.stringify({i,label}))}catch(e){}
+  $('mood-msg').textContent='Feeling '+label.toLowerCase()+' today — noted 🌸';
+  $('mood-msg').style.color=MOOD_C[i];
+}
+function loadMood(){
+  try{const s=ls(moodKey());if(!s)return;const{i,label}=JSON.parse(s);setMood(i,'',label)}catch(e){}
+}
+loadMood();
+</script>
+</body>
+</html>
